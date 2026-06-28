@@ -204,13 +204,13 @@ async function promptNodeDownload(): Promise<void> {
   }
 }
 
-// 弹出提示让用户下载 Chrome
+// 弹出提示让用户检查 Chrome
 async function promptChromeDownload(): Promise<void> {
   const result = await dialog.showMessageBox({
     type: 'info',
-    title: '需要 Google Chrome 浏览器',
+    title: '未检测到可启动的 Chrome',
     message: '抖音/快手视频解析需要 Chrome 浏览器支持',
-    detail: '点击"确定"将跳转到 Chrome 下载页面，请下载并安装 Chrome 后重试。',
+    detail: '当前没有找到可启动的 Chrome 浏览器。请确认 Chrome 已安装在“应用程序”文件夹，或点击“确定”打开 Chrome 下载页面。',
     buttons: ['确定', '取消'],
     defaultId: 0,
   })
@@ -702,29 +702,53 @@ async function parseDouyinWithAPI(url: string): Promise<any> {
   }
 }
 
-// 获取 Chromium 路径
-function getChromiumPath(): string | null {
-  // 1. 优先使用系统 Chrome
-  const chromePaths = [
-    'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
-    'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
-    path.join(os.homedir(), 'AppData', 'Local', 'Google', 'Chrome', 'Application', 'chrome.exe'),
-  ]
-  for (const p of chromePaths) {
+function getExistingPath(paths: string[]): string | null {
+  for (const p of paths) {
     if (fs.existsSync(p)) return p
   }
-
-  // 2. 使用系统 Edge（Windows 10/11 预装）
-  const edgePaths = [
-    'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
-    'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
-    path.join(os.homedir(), 'AppData', 'Local', 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
-  ]
-  for (const p of edgePaths) {
-    if (fs.existsSync(p)) return p
-  }
-
   return null
+}
+
+function getMacBrowserExecutable(appName: string, executableName: string): string[] {
+  const relativeExecutable = path.join('Contents', 'MacOS', executableName)
+  return [
+    path.join('/Applications', appName, relativeExecutable),
+    path.join(os.homedir(), 'Applications', appName, relativeExecutable),
+  ]
+}
+
+// 获取 Chromium 路径。Puppeteer 在 macOS 上需要 .app 内部的真实可执行文件路径。
+function getChromiumPath(): string | null {
+  const configuredPath = process.env.PUPPETEER_EXECUTABLE_PATH || process.env.CHROME_PATH
+  if (configuredPath && fs.existsSync(configuredPath)) return configuredPath
+
+  if (process.platform === 'darwin') {
+    return getExistingPath([
+      ...getMacBrowserExecutable('Google Chrome.app', 'Google Chrome'),
+      ...getMacBrowserExecutable('Google Chrome Canary.app', 'Google Chrome Canary'),
+      ...getMacBrowserExecutable('Chromium.app', 'Chromium'),
+      ...getMacBrowserExecutable('Microsoft Edge.app', 'Microsoft Edge'),
+    ])
+  }
+
+  if (process.platform === 'win32') {
+    return getExistingPath([
+      'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
+      'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe',
+      path.join(os.homedir(), 'AppData', 'Local', 'Google', 'Chrome', 'Application', 'chrome.exe'),
+      'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe',
+      'C:\\Program Files\\Microsoft\\Edge\\Application\\msedge.exe',
+      path.join(os.homedir(), 'AppData', 'Local', 'Microsoft', 'Edge', 'Application', 'msedge.exe'),
+    ])
+  }
+
+  return getExistingPath([
+    '/usr/bin/google-chrome-stable',
+    '/usr/bin/google-chrome',
+    '/usr/bin/chromium-browser',
+    '/usr/bin/chromium',
+    '/snap/bin/chromium',
+  ])
 }
 
 // 获取可用的浏览器名称（用于 yt-dlp --cookies-from-browser）
@@ -733,9 +757,9 @@ function getAvailableBrowser(): string {
 
   if (platform === 'darwin') {
     const macBrowsers = [
-      { name: 'chrome', paths: ['/Applications/Google Chrome.app', path.join(os.homedir(), 'Applications', 'Google Chrome.app')] },
-      { name: 'edge', paths: ['/Applications/Microsoft Edge.app', path.join(os.homedir(), 'Applications', 'Microsoft Edge.app')] },
-      { name: 'brave', paths: ['/Applications/Brave Browser.app', path.join(os.homedir(), 'Applications', 'Brave Browser.app')] },
+      { name: 'chrome', paths: ['/Applications/Google Chrome.app', path.join(os.homedir(), 'Applications', 'Google Chrome.app'), ...getMacBrowserExecutable('Google Chrome.app', 'Google Chrome')] },
+      { name: 'edge', paths: ['/Applications/Microsoft Edge.app', path.join(os.homedir(), 'Applications', 'Microsoft Edge.app'), ...getMacBrowserExecutable('Microsoft Edge.app', 'Microsoft Edge')] },
+      { name: 'brave', paths: ['/Applications/Brave Browser.app', path.join(os.homedir(), 'Applications', 'Brave Browser.app'), ...getMacBrowserExecutable('Brave Browser.app', 'Brave Browser')] },
       { name: 'firefox', paths: ['/Applications/Firefox.app', path.join(os.homedir(), 'Applications', 'Firefox.app')] },
       { name: 'safari', paths: ['/Applications/Safari.app'] },
     ]
@@ -777,6 +801,10 @@ function shouldUseCookies(url: string): boolean {
     'b23.tv',
     'instagram.com',
     'tiktok.com',
+    'douyin.com',
+    'v.douyin.com',
+    'kuaishou.com',
+    'v.kuaishou.com',
     'twitter.com',
     'x.com',
     'facebook.com',
@@ -805,6 +833,8 @@ function shouldRetryWithBrowserCookies(url: string, cookiesFile: string | undefi
     lower.includes('empty media response') ||
     lower.includes('cookies-from-browser') ||
     lower.includes('--cookies') ||
+    lower.includes('fresh cookies') ||
+    lower.includes('cookies are needed') ||
     lower.includes('login') ||
     lower.includes('authenticated') ||
     lower.includes('private') ||
@@ -822,8 +852,12 @@ function normalizeYtDlpError(message: string): string {
     return 'Instagram 没有返回视频内容。这个帖子通常需要登录后才能解析，请在设置里导入 Instagram 登录后的 cookies.txt，或先确认这个帖子在浏览器无登录状态下也能打开。'
   }
 
+  if (lower.includes('fresh cookies') || lower.includes('cookies are needed')) {
+    return '抖音要求使用新的登录 Cookie。请先用 Chrome 打开抖音并登录，然后回到 YBDown 重试；如果仍失败，请在设置里导入抖音 cookies.txt。'
+  }
+
   if (lower.includes('cookies-from-browser') || lower.includes('--cookies') || lower.includes('login') || lower.includes('authenticated')) {
-    return '该内容需要登录态。请在设置里导入对应网站的 cookies.txt 后重试。'
+    return '该内容需要登录态。请先在浏览器登录对应网站后重试；如果仍失败，请在设置里导入对应网站的 cookies.txt。'
   }
 
   if (cleaned.startsWith('ERROR:')) {
