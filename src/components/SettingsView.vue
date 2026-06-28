@@ -1,5 +1,5 @@
 <template>
-  <div class="flex-1 overflow-y-auto bg-background">
+  <div class="app-workspace flex-1 overflow-y-auto">
     <div class="mx-auto flex w-full max-w-3xl flex-col gap-5 px-8 py-8 pb-10">
       <div class="flex items-start justify-between gap-4">
         <div>
@@ -7,12 +7,12 @@
           <h1 class="mt-2 font-headline text-3xl font-semibold text-on-surface">偏好设置</h1>
           <p class="mt-2 text-base text-on-surface-variant">管理下载目录、文件命名和登录态文件。</p>
         </div>
-        <div v-if="savedMessage" class="max-w-xs rounded-md border border-outline-variant/40 bg-surface-container-lowest px-4 py-2 text-sm leading-6 text-primary shadow-sm">
+        <div v-if="savedMessage" class="max-w-xs rounded-lg border border-tertiary/25 bg-tertiary-container/35 px-4 py-2 text-sm leading-6 text-tertiary shadow-sm">
           {{ savedMessage }}
         </div>
       </div>
 
-      <section class="rounded-lg border border-outline-variant/45 bg-surface-container-lowest shadow-ambient">
+      <section class="pro-panel rounded-lg">
         <div class="border-b border-outline-variant/30 p-5">
           <div class="flex items-start justify-between gap-4">
             <div class="flex min-w-0 items-start gap-3">
@@ -25,7 +25,7 @@
               </div>
             </div>
             <button
-              class="h-10 shrink-0 rounded-md border border-outline-variant/40 bg-surface-container-low px-4 text-sm font-semibold text-on-surface transition-colors hover:bg-surface-container-high"
+              class="h-10 shrink-0 rounded-lg border border-outline-variant/40 bg-surface-container-low px-4 text-sm font-semibold text-on-surface transition-colors hover:bg-surface-container-high"
               @click="resetDownloadDir"
             >
               使用默认
@@ -37,10 +37,10 @@
               v-model="settings.downloadDir"
               type="text"
               readonly
-              class="min-w-0 flex-1 truncate rounded-md border border-outline-variant/30 bg-surface-container-low px-3 py-2.5 font-mono text-sm text-on-surface focus:border-primary focus:outline-none"
+              class="soft-input min-w-0 flex-1 truncate rounded-lg border border-outline-variant/30 px-3 py-2.5 font-mono text-sm text-on-surface focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10"
             />
             <button
-              class="h-11 shrink-0 rounded-md bg-primary px-5 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-dim"
+              class="h-11 shrink-0 rounded-lg bg-primary px-5 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-dim"
               @click="selectDownloadDir"
             >
               选择目录
@@ -59,7 +59,7 @@
               <input
                 v-model="settings.filenameTemplate"
                 type="text"
-                class="mt-4 w-full rounded-md border border-outline-variant/30 bg-surface-container-low px-3 py-2.5 font-mono text-sm text-on-surface focus:border-primary focus:outline-none"
+                class="soft-input mt-4 w-full rounded-lg border border-outline-variant/30 px-3 py-2.5 font-mono text-sm text-on-surface focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10"
                 placeholder="%(title)s"
               />
               <p class="mt-2 text-sm text-on-surface-variant">可用变量：%(title)s / %(id)s / %(uploader)s</p>
@@ -79,7 +79,7 @@
                 <label
                   v-for="quality in qualityOptions"
                   :key="quality.value"
-                  class="flex h-10 cursor-pointer items-center justify-center rounded-md border text-sm font-semibold transition-colors"
+                  class="flex h-10 cursor-pointer items-center justify-center rounded-lg border text-sm font-semibold transition-colors"
                   :class="settings.preferredQuality === quality.value ? 'border-primary bg-primary-container text-on-primary-container' : 'border-outline-variant/40 bg-surface-container-low text-on-surface-variant hover:text-on-surface'"
                 >
                   <input v-model="settings.preferredQuality" type="radio" :value="quality.value" class="hidden" />
@@ -104,13 +104,13 @@
             <div class="flex shrink-0 gap-2">
               <button
                 v-if="settings.cookiesFile"
-                class="h-10 rounded-md border border-outline-variant/40 bg-surface-container-low px-4 text-sm font-semibold text-on-surface transition-colors hover:bg-surface-container-high"
+                class="h-10 rounded-lg border border-outline-variant/40 bg-surface-container-low px-4 text-sm font-semibold text-on-surface transition-colors hover:bg-surface-container-high"
                 @click="clearCookiesFile"
               >
                 清除
               </button>
               <button
-                class="h-10 rounded-md bg-primary px-4 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-dim"
+                class="h-10 rounded-lg bg-primary px-4 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-dim"
                 @click="selectCookiesFile"
               >
                 选择文件
@@ -122,13 +122,13 @@
             type="text"
             readonly
             placeholder="未选择 cookies.txt"
-            class="mt-5 w-full truncate rounded-md border border-outline-variant/30 bg-surface-container-low px-3 py-2.5 font-mono text-sm text-on-surface placeholder:text-on-surface-variant/60 focus:border-primary focus:outline-none"
+            class="soft-input mt-5 w-full truncate rounded-lg border border-outline-variant/30 px-3 py-2.5 font-mono text-sm text-on-surface placeholder:text-on-surface-variant/60 focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10"
           />
         </div>
       </section>
 
       <button
-        class="flex h-12 items-center justify-center gap-2 rounded-md bg-primary text-base font-semibold text-on-primary shadow-sm transition-colors hover:bg-primary-dim"
+        class="flex h-12 items-center justify-center gap-2 rounded-lg bg-primary text-base font-semibold text-on-primary shadow-sm transition-colors hover:bg-primary-dim"
         @click="saveSettings()"
       >
         <MaterialIcon name="save" :size="20" />

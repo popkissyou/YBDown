@@ -2,10 +2,10 @@
   <h1>YBDown</h1>
 </div>
 
-YBDown 是一款现代化的开源视频下载工具，让你可以从抖音、小红书、B站、YouTube、Instagram 等网站下载视频。基于 Electron 构建，使用 yt-dlp 作为下载引擎。
+YBDown 是一款面向 macOS 的现代化开源视频下载工具，让你可以从抖音、小红书、B站、YouTube、Instagram 等网站下载视频。基于 Electron 构建，使用 yt-dlp 作为下载引擎。
 
   <p>
-    <a href="https://github.com/popkissyou/YBDown/stargazers"><img src="src/assets/screen.png" alt="YBDown Screenshot" width="98%"></a>
+    <a href="https://github.com/popkissyou/YBDown/stargazers"><img src="src/assets/readme-screen.svg" alt="YBDown Screenshot" width="98%"></a>
     <a href="https://github.com/popkissyou/YBDown/releases"><img src="https://img.shields.io/github/downloads/popkissyou/YBDown/total?color=369eff&labelColor=black&logo=github&label=Downloads" /></a>
     <a href="https://github.com/popkissyou/YBDown/releases/latest"><img src="https://img.shields.io/github/v/release/popkissyou/YBDown?color=369eff&labelColor=black&logo=github&label=Latest%20Release" /></a>
     <br />
@@ -59,8 +59,8 @@ YBDown 通过 yt-dlp 支持 1000+ 个视频和音频平台。主要支持：
 ### 下载安装
 
 1. 访问 [Releases](https://github.com/popkissyou/YBDown/releases) 页面
-2. 下载最新版本的安装程序
-3. 运行安装程序，按提示完成安装
+2. 下载最新版本的 `YBDown-Mac-*-Installer.dmg`
+3. 打开 DMG，将 YBDown 拖入 Applications
 4. 安装完成后即可使用
 
 ### 从源码构建
@@ -76,33 +76,11 @@ cd YBDown
 
 本项目需要 **yt-dlp** 和 **ffmpeg** 才能正常运行。
 
-**Windows 用户：**
-
-```powershell
-# 下载 yt-dlp
-Invoke-WebRequest -Uri "https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp.exe" -OutFile "yt-dlp.exe"
-
-# 下载 ffmpeg
-Invoke-WebRequest -Uri "https://github.com/BtbN/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip" -OutFile "ffmpeg.zip"
-Expand-Archive -Path "ffmpeg.zip" -DestinationPath "."
-Copy-Item -Path "ffmpeg-master-latest-win64-gpl/bin/ffmpeg.exe" -Destination "ffmpeg.exe"
-Remove-Item -Path "ffmpeg.zip" -Recurse -Force
-Remove-Item -Path "ffmpeg-master-latest-win64-gpl" -Recurse -Force
-```
-
-**macOS/Linux 用户：**
+**macOS 用户：**
 
 ```bash
-# 使用包管理器安装 yt-dlp 和 ffmpeg
-# macOS (Homebrew)
+# 使用 Homebrew 安装 yt-dlp 和 ffmpeg
 brew install yt-dlp ffmpeg
-
-# Ubuntu/Debian
-sudo apt update
-sudo apt install yt-dlp ffmpeg
-
-# Arch Linux
-sudo pacman -S yt-dlp ffmpeg
 ```
 
 #### 3. 安装项目依赖
@@ -142,7 +120,7 @@ pnpm build
 
 ## 🛠️ 技术栈
 
-- **Electron** - 跨平台桌面应用框架
+- **Electron** - macOS 桌面应用框架
 - **Vue 3** - 渐进式 JavaScript 框架
 - **TypeScript** - 类型安全的 JavaScript 超集
 - **Tailwind CSS** - 实用优先的 CSS 框架
@@ -206,7 +184,7 @@ SOFTWARE.
 
 - [yt-dlp](https://github.com/yt-dlp/yt-dlp) - 强大的视频下载引擎
 - [FFmpeg](https://ffmpeg.org/) - 音视频处理解决方案
-- [Electron](https://www.electronjs.org/) - 跨平台桌面应用框架
+- [Electron](https://www.electronjs.org/) - 桌面应用框架
 - [Vue.js](https://vuejs.org/) - 渐进式 JavaScript 框架
 - [Vite](https://vitejs.dev/) - 下一代前端构建工具
 - [Tailwind CSS](https://tailwindcss.com/) - 实用优先的 CSS 框架

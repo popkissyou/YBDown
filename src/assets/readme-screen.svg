@@ -1,0 +1,83 @@
+<svg width="1600" height="900" viewBox="0 0 1600 900" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1600" height="900" fill="#EEF2F6"/>
+  <rect y="0" width="1600" height="86" fill="#F8FAFC"/>
+  <line y1="85.5" x2="1600" y2="85.5" stroke="#CBD5E1"/>
+
+  <rect x="110" y="20" width="46" height="46" rx="10" fill="#DBEAFE" stroke="#BFDBFE"/>
+  <path d="M133 31v22m0 0l-9-9m9 9l9-9" stroke="#2563EB" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="172" y="43" font-family="Arial, 'Noto Sans SC', sans-serif" font-size="25" font-weight="700" fill="#111827">YBDown</text>
+  <text x="172" y="65" font-family="Arial, 'Noto Sans SC', sans-serif" font-size="14" fill="#64748B">Local media downloader</text>
+
+  <rect x="1178" y="14" width="328" height="58" rx="8" fill="#FFFFFF" stroke="#D7DEE8"/>
+  <rect x="1186" y="22" width="106" height="42" rx="7" fill="#2563EB"/>
+  <text x="1239" y="49" text-anchor="middle" font-family="Arial, 'Noto Sans SC', sans-serif" font-size="16" font-weight="700" fill="#FFFFFF">下载</text>
+  <text x="1360" y="49" text-anchor="middle" font-family="Arial, 'Noto Sans SC', sans-serif" font-size="16" font-weight="700" fill="#334155">历史</text>
+  <text x="1460" y="49" text-anchor="middle" font-family="Arial, 'Noto Sans SC', sans-serif" font-size="16" font-weight="700" fill="#334155">关于</text>
+  <rect x="1520" y="14" width="54" height="58" rx="8" fill="#FFFFFF" stroke="#D7DEE8"/>
+  <circle cx="1547" cy="43" r="8" stroke="#64748B" stroke-width="3"/>
+
+  <rect x="0" y="86" width="1010" height="814" fill="#F8FAFC" fill-opacity="0.82"/>
+  <rect x="1010" y="86" width="590" height="814" fill="#F1F5F9"/>
+  <line x1="1010.5" y1="86" x2="1010.5" y2="900" stroke="#D0D9E5"/>
+
+  <circle cx="48" cy="138" r="7" fill="#0F766E"/>
+  <circle cx="48" cy="138" r="18" fill="#0F766E" fill-opacity="0.16"/>
+  <text x="72" y="145" font-family="Arial, 'Noto Sans SC', sans-serif" font-size="15" font-weight="700" fill="#64748B">本地引擎已就绪</text>
+  <text x="40" y="198" font-family="Arial, 'Noto Sans SC', sans-serif" font-size="44" font-weight="800" fill="#111827">媒体解析工作台</text>
+  <text x="40" y="242" font-family="Arial, 'Noto Sans SC', sans-serif" font-size="22" fill="#64748B">粘贴链接后自动解析可下载资源，再选择画质、音轨或字幕交给本地引擎处理。</text>
+
+  <rect x="782" y="148" width="180" height="78" rx="8" fill="#FFFFFF" stroke="#D7DEE8"/>
+  <text x="872" y="177" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">Local Engine</text>
+  <text x="872" y="203" text-anchor="middle" font-family="'SF Mono', Menlo, monospace" font-size="14" fill="#475569">yt-dlp / ffmpeg</text>
+
+  <rect x="40" y="256" width="924" height="318" rx="8" fill="#FFFFFF" stroke="#C8D3E0"/>
+  <rect x="60" y="280" width="46" height="46" rx="10" fill="#DBEAFE"/>
+  <path d="M76 303h15m-8-8v16" stroke="#2563EB" stroke-width="3" stroke-linecap="round"/>
+  <text x="124" y="302" font-family="Arial, 'Noto Sans SC', sans-serif" font-size="20" font-weight="800" fill="#111827">视频链接</text>
+  <text x="124" y="326" font-family="Arial, 'Noto Sans SC', sans-serif" font-size="15" fill="#64748B">支持单个视频、播放页和短链接</text>
+  <rect x="846" y="286" width="94" height="34" rx="7" fill="#F3F7FB"/>
+  <text x="893" y="308" text-anchor="middle" font-family="'SF Mono', Menlo, monospace" font-size="13" fill="#64748B">Paste URL</text>
+  <rect x="60" y="350" width="884" height="138" rx="6" fill="#FBFCFE" stroke="#D5DEE8"/>
+  <text x="82" y="394" font-family="Arial, 'Noto Sans SC', sans-serif" font-size="20" fill="#9AA6B2">在此处粘贴需要解析的视频链接...</text>
+  <rect x="60" y="512" width="350" height="56" rx="7" fill="#F3F7FB" stroke="#D5DEE8"/>
+  <text x="235" y="547" text-anchor="middle" font-family="Arial, 'Noto Sans SC', sans-serif" font-size="18" font-weight="700" fill="#111827">粘贴链接</text>
+  <rect x="426" y="512" width="518" height="56" rx="7" fill="#2563EB"/>
+  <text x="685" y="547" text-anchor="middle" font-family="Arial, 'Noto Sans SC', sans-serif" font-size="18" font-weight="700" fill="#FFFFFF">解析视频信息</text>
+
+  <rect x="40" y="610" width="924" height="106" rx="8" fill="#F6F9FC" stroke="#C8D3E0"/>
+  <text x="60" y="642" font-family="Arial, 'Noto Sans SC', sans-serif" font-size="14" font-weight="700" fill="#64748B">支持平台</text>
+  <g font-family="Arial, 'Noto Sans SC', sans-serif" font-size="15" font-weight="700" fill="#475569">
+    <rect x="60" y="662" width="88" height="36" rx="6" fill="#FFFFFF" stroke="#D5DEE8"/>
+    <text x="104" y="685" text-anchor="middle">抖音</text>
+    <rect x="162" y="662" width="100" height="36" rx="6" fill="#FFFFFF" stroke="#D5DEE8"/>
+    <text x="212" y="685" text-anchor="middle">小红书</text>
+    <rect x="276" y="662" width="76" height="36" rx="6" fill="#FFFFFF" stroke="#D5DEE8"/>
+    <text x="314" y="685" text-anchor="middle">B站</text>
+    <rect x="366" y="662" width="106" height="36" rx="6" fill="#FFFFFF" stroke="#D5DEE8"/>
+    <text x="419" y="685" text-anchor="middle">YouTube</text>
+    <rect x="486" y="662" width="120" height="36" rx="6" fill="#FFFFFF" stroke="#D5DEE8"/>
+    <text x="546" y="685" text-anchor="middle">Instagram</text>
+  </g>
+
+  <text x="1040" y="140" font-family="Arial, 'Noto Sans SC', sans-serif" font-size="24" font-weight="800" fill="#111827">任务队列</text>
+  <text x="1040" y="166" font-family="Arial, 'Noto Sans SC', sans-serif" font-size="15" fill="#64748B">下载进度、日志和文件位置</text>
+  <rect x="1450" y="128" width="84" height="34" rx="8" fill="#E2E8F0"/>
+  <text x="1492" y="151" text-anchor="middle" font-family="Arial, 'Noto Sans SC', sans-serif" font-size="15" font-weight="700" fill="#334155">0 进行中</text>
+
+  <rect x="1040" y="190" width="520" height="272" rx="8" fill="#FFFFFF" stroke="#C8D3E0"/>
+  <line x1="1040" y1="238.5" x2="1560" y2="238.5" stroke="#D7DEE8"/>
+  <text x="1084" y="220" font-family="Arial, 'Noto Sans SC', sans-serif" font-size="18" font-weight="800" fill="#111827">执行过程</text>
+  <text x="1518" y="220" text-anchor="end" font-family="Arial, 'Noto Sans SC', sans-serif" font-size="14" fill="#64748B">清空</text>
+  <text x="1300" y="342" text-anchor="middle" font-family="Arial, 'Noto Sans SC', sans-serif" font-size="15" fill="#64748B">解析或下载时会显示详细过程</text>
+
+  <rect x="1040" y="486" width="520" height="256" rx="8" fill="#F8FAFC" stroke="#C8D3E0"/>
+  <rect x="1264" y="548" width="72" height="72" rx="8" fill="#FFFFFF"/>
+  <circle cx="1300" cy="584" r="20" stroke="#A8B3C2" stroke-width="4"/>
+  <path d="M1300 570v24m0 0l-10-10m10 10l10-10" stroke="#A8B3C2" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="1300" y="654" text-anchor="middle" font-family="Arial, 'Noto Sans SC', sans-serif" font-size="18" font-weight="800" fill="#111827">暂无下载任务</text>
+  <text x="1300" y="684" text-anchor="middle" font-family="Arial, 'Noto Sans SC', sans-serif" font-size="15" fill="#94A3B8">解析视频后点击下载按钮添加任务</text>
+
+  <line x1="1040" y1="826.5" x2="1560" y2="826.5" stroke="#CBD5E1"/>
+  <text x="1072" y="860" font-family="Arial, 'Noto Sans SC', sans-serif" font-size="15" fill="#64748B">存储空间: 可用</text>
+  <text x="1505" y="860" text-anchor="end" font-family="Arial, 'Noto Sans SC', sans-serif" font-size="15" fill="#64748B">未设置</text>
+</svg>

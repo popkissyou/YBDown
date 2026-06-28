@@ -1,30 +1,45 @@
 <template>
-  <div class="flex-1 flex overflow-hidden bg-background">
+  <div class="app-workspace flex-1 flex overflow-hidden bg-background">
     <!-- Left Panel -->
-    <section class="w-[62%] flex flex-col bg-surface relative">
+    <section class="relative flex w-[63%] flex-col border-r border-outline-variant/45 bg-surface/88">
       <div class="flex-1 overflow-y-auto px-8 py-7">
-        <div class="max-w-3xl mx-auto w-full flex flex-col gap-6">
+        <div class="mx-auto flex w-full max-w-3xl flex-col gap-6">
           <!-- Title -->
           <div class="flex items-end justify-between gap-4">
             <div class="flex flex-col gap-1">
-              <span class="text-sm font-medium text-primary">YBDown</span>
-              <h1 class="font-headline text-2xl font-semibold leading-tight text-on-surface">媒体解析工作台</h1>
-              <p class="text-on-surface-variant text-sm">粘贴链接，选择格式，然后交给本地引擎处理。</p>
+              <div class="flex items-center gap-2">
+                <span class="status-dot"></span>
+                <span class="section-kicker">本地引擎已就绪</span>
+              </div>
+              <h1 class="font-headline text-[28px] font-semibold leading-tight text-on-surface">媒体解析工作台</h1>
+              <p class="max-w-xl text-sm leading-6 text-on-surface-variant">粘贴链接后自动解析可下载资源，再选择画质、音轨或字幕交给本地引擎处理。</p>
             </div>
-            <div class="hidden rounded-md border border-outline-variant/40 bg-surface-container-lowest px-3 py-2 text-right text-xs text-on-surface-variant shadow-sm lg:block">
+            <div class="hidden min-w-[150px] rounded-lg border border-outline-variant/40 bg-surface-container-lowest px-3.5 py-3 text-right text-xs text-on-surface-variant shadow-sm lg:block">
               <div class="font-semibold text-on-surface">Local Engine</div>
-              <div>yt-dlp / ffmpeg</div>
+              <div class="mt-1 font-mono">yt-dlp / ffmpeg</div>
             </div>
           </div>
           
           <!-- URL Input -->
-          <div class="flex flex-col gap-3 rounded-lg border border-outline-variant/40 bg-surface-container-lowest p-4 shadow-ambient">
+          <div class="pro-panel flex flex-col gap-3 rounded-lg p-4">
+            <div class="flex items-center justify-between gap-3">
+              <div class="flex items-center gap-2">
+                <div class="flex size-8 items-center justify-center rounded-md bg-primary-container text-primary">
+                  <MaterialIcon name="link" :size="18" />
+                </div>
+                <div>
+                  <p class="text-sm font-semibold text-on-surface">视频链接</p>
+                  <p class="text-xs text-on-surface-variant">支持单个视频、播放页和短链接</p>
+                </div>
+              </div>
+              <span class="hidden rounded-md bg-surface-container-low px-2.5 py-1 font-mono text-[11px] text-on-surface-variant sm:inline-flex">Paste URL</span>
+            </div>
             <div class="relative">
               <textarea 
                 ref="urlInput"
                 v-model="url"
                 aria-label="Paste video URL here" 
-                class="w-full h-28 bg-surface-container-low rounded-md p-3 text-on-surface placeholder:text-on-surface-variant/60 resize-none font-body text-sm border border-outline-variant/30 focus:border-primary focus:outline-none transition-all"
+                class="soft-input h-28 w-full resize-none rounded-lg border border-outline-variant/35 p-3.5 font-body text-sm text-on-surface placeholder:text-on-surface-variant/60 transition-all focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10"
                 placeholder="在此处粘贴需要解析的视频链接..."
                 @contextmenu.prevent="showContextMenu"
               />
@@ -74,14 +89,14 @@
             </div>
             <div class="flex gap-3">
               <button 
-                class="flex-1 flex items-center justify-center gap-2 rounded-md h-10 bg-surface-container-low text-on-surface font-headline font-semibold text-sm hover:bg-surface-container-high transition-colors border border-outline-variant/30"
+                class="flex h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-outline-variant/35 bg-surface-container-low text-sm font-semibold text-on-surface transition-colors hover:bg-surface-container-high"
                 @click="pasteUrl"
               >
                 <MaterialIcon name="content_paste" :size="18" />
                 <span>粘贴链接</span>
               </button>
               <button
-                class="flex-[1.5] flex items-center justify-center gap-2 rounded-md h-10 font-headline font-semibold text-sm transition-all bg-primary text-on-primary hover:bg-primary-dim disabled:opacity-50 disabled:cursor-not-allowed"
+                class="flex h-11 flex-[1.5] items-center justify-center gap-2 rounded-lg bg-primary text-sm font-semibold text-on-primary shadow-sm transition-all hover:bg-primary-dim disabled:cursor-not-allowed disabled:opacity-50"
                 :disabled="isParsing"
                 @click="parseVideo"
               >
@@ -93,7 +108,7 @@
           </div>
           
           <!-- YouTube Cookie Hint -->
-          <div v-if="isYouTubeUrl && !hasParsed" class="flex flex-col gap-2 p-4 bg-tertiary-container/30 rounded-lg border border-tertiary/20">
+          <div v-if="isYouTubeUrl && !hasParsed" class="flex flex-col gap-2 rounded-lg border border-tertiary/25 bg-tertiary-container/35 p-4">
             <div class="flex items-start gap-3">
               <MaterialIcon name="info" :size="20" class="text-tertiary flex-shrink-0 mt-0.5" />
               <div class="flex-1">
@@ -114,7 +129,7 @@
           </div>
 
           <!-- Bilibili Cookie Hint -->
-          <div v-if="showBilibiliCookieHint && !hasParsed" class="flex flex-col gap-2 p-4 bg-tertiary-container/30 rounded-lg border border-tertiary/20">
+          <div v-if="showBilibiliCookieHint && !hasParsed" class="flex flex-col gap-2 rounded-lg border border-tertiary/25 bg-tertiary-container/35 p-4">
             <div class="flex items-start gap-3">
               <MaterialIcon name="info" :size="20" class="text-tertiary flex-shrink-0 mt-0.5" />
               <div class="flex-1">
@@ -134,10 +149,10 @@
           </div>
 
           <!-- Supported Platforms -->
-          <div class="flex flex-col gap-2 mt-2">
-            <span class="ml-1 text-sm font-semibold text-on-surface-variant">支持平台</span>
-            <div class="flex flex-wrap items-center gap-2 px-3 py-2 bg-surface-container-lowest rounded-md border border-outline-variant/40 shadow-sm">
-              <div v-for="platform in platforms" :key="platform.name" class="flex items-center gap-2 transition-all cursor-default">
+          <div class="subtle-panel mt-1 flex flex-col gap-3 rounded-lg px-4 py-3">
+            <span class="section-kicker">支持平台</span>
+            <div class="flex flex-wrap items-center gap-2">
+              <div v-for="platform in platforms" :key="platform.name" class="flex h-8 cursor-default items-center gap-2 rounded-md border border-outline-variant/25 bg-surface-container-lowest px-2.5 transition-colors">
                 <MaterialIcon :name="platform.icon" :size="16" class="text-primary" :weight="200"/>
                 <span class="text-xs font-medium text-on-surface-variant">{{ platform.name }}</span>
               </div>
@@ -145,13 +160,16 @@
           </div>
           
           <!-- Preview Section -->
-          <div v-if="videoInfo" class="mt-2 flex flex-col gap-4">
-            <h3 class="font-headline text-sm font-bold text-on-surface border-b border-outline-variant/30 pb-2">解析结果</h3>
+          <div v-if="videoInfo" class="mt-1 flex flex-col gap-4">
+            <div class="flex items-center justify-between border-b border-outline-variant/30 pb-2">
+              <h3 class="font-headline text-sm font-bold text-on-surface">解析结果</h3>
+              <span class="rounded-md bg-tertiary-container px-2.5 py-1 text-xs font-semibold text-on-tertiary-container">可下载</span>
+            </div>
             
             <!-- Video Info Card -->
-            <div class="flex gap-4 p-3 bg-surface-container-lowest rounded-md border border-outline-variant/40 shadow-sm">
+            <div class="pro-panel flex gap-4 rounded-lg p-3">
               <div 
-                class="w-40 h-24 rounded-sm bg-surface-variant bg-cover bg-center flex-shrink-0 relative overflow-hidden shadow-sm"
+                class="relative h-24 w-40 flex-shrink-0 overflow-hidden rounded-md bg-surface-variant bg-cover bg-center shadow-sm"
                 :style="{ backgroundImage: `url(${videoInfo.thumbnail})` }"
               >
                 <div v-if="videoInfo.duration" class="absolute bottom-1 right-1 bg-inverse-surface/80 backdrop-blur-sm text-inverse-on-surface text-[11px] font-mono px-1 rounded-sm">
@@ -181,13 +199,13 @@
             
             <!-- Format Selection - Two Column Layout -->
             <div class="flex flex-col gap-2">
-              <span class="text-[11px] font-bold text-outline uppercase tracking-wider">视频格式 (MP4) - 共 {{ videoInfo.formats?.length || 0 }} 个</span>
+              <span class="section-kicker">视频格式 MP4 / 共 {{ videoInfo.formats?.length || 0 }} 个</span>
               <div class="grid grid-cols-2 gap-2">
                 <label 
                   v-for="format in videoInfo.formats" 
                   :key="format.formatId"
-                  class="flex items-center justify-between p-2.5 rounded-md cursor-pointer transition-colors"
-                  :class="selectedFormat?.formatId === format.formatId ? 'bg-primary-container border border-primary/40' : 'bg-surface-container-lowest border border-outline-variant/30 hover:border-primary/40'"
+                  class="flex cursor-pointer items-center justify-between rounded-lg p-2.5 transition-colors"
+                  :class="selectedFormat?.formatId === format.formatId ? 'border border-primary/45 bg-primary-container shadow-sm' : 'border border-outline-variant/30 bg-surface-container-lowest hover:border-primary/40'"
                   @click="selectVideoFormat(format)"
                 >
                   <div class="flex items-center gap-2">
@@ -204,13 +222,13 @@
             
             <!-- YouTube Audio Formats -->
             <div v-if="videoInfo.isYoutube === true && videoInfo.audioFormats?.length" class="flex flex-col gap-2">
-              <span class="text-[11px] font-bold text-outline uppercase tracking-wider">纯音频格式 - 共 {{ videoInfo.audioFormats.length }} 个</span>
+              <span class="section-kicker">纯音频格式 / 共 {{ videoInfo.audioFormats.length }} 个</span>
               <div class="grid grid-cols-2 gap-2">
                 <label 
                   v-for="format in videoInfo.audioFormats" 
                   :key="format.formatId"
-                  class="flex items-center justify-between p-2.5 rounded-md cursor-pointer transition-colors"
-                  :class="selectedAudioFormat?.formatId === format.formatId ? 'bg-primary-container border border-primary/40' : 'bg-surface-container-lowest border border-outline-variant/30 hover:border-primary/40'"
+                  class="flex cursor-pointer items-center justify-between rounded-lg p-2.5 transition-colors"
+                  :class="selectedAudioFormat?.formatId === format.formatId ? 'border border-primary/45 bg-primary-container shadow-sm' : 'border border-outline-variant/30 bg-surface-container-lowest hover:border-primary/40'"
                   @click="selectAudioFormat(format)"
                 >
                   <div class="flex items-center gap-2">
@@ -227,13 +245,13 @@
             
             <!-- YouTube Audio Tracks -->
             <div v-if="videoInfo.isYoutube === true && videoInfo.audioTracks?.length" class="flex flex-col gap-2">
-              <span class="text-[11px] font-bold text-outline uppercase tracking-wider">音频轨道 - 共 {{ videoInfo.audioTracks.length }} 个</span>
+              <span class="section-kicker">音频轨道 / 共 {{ videoInfo.audioTracks.length }} 个</span>
               <div class="grid grid-cols-2 gap-2">
                 <label 
                   v-for="track in videoInfo.audioTracks" 
                   :key="track.id"
-                  class="flex items-center justify-between p-2.5 rounded-md cursor-pointer transition-colors"
-                  :class="selectedAudioTrack?.id === track.id ? 'bg-primary-container border border-primary/40' : 'bg-surface-container-lowest border border-outline-variant/30 hover:border-primary/40'"
+                  class="flex cursor-pointer items-center justify-between rounded-lg p-2.5 transition-colors"
+                  :class="selectedAudioTrack?.id === track.id ? 'border border-primary/45 bg-primary-container shadow-sm' : 'border border-outline-variant/30 bg-surface-container-lowest hover:border-primary/40'"
                   @click="selectAudioTrack(track)"
                 >
                   <div class="flex items-center gap-2">
@@ -250,13 +268,13 @@
             
             <!-- YouTube Subtitles -->
             <div v-if="videoInfo.isYoutube === true && videoInfo.subtitles?.length" class="flex flex-col gap-2">
-              <span class="text-[11px] font-bold text-outline uppercase tracking-wider">字幕 - 共 {{ videoInfo.subtitles.length }} 个</span>
+              <span class="section-kicker">字幕 / 共 {{ videoInfo.subtitles.length }} 个</span>
               <div class="flex flex-wrap gap-2">
                 <label 
                   v-for="sub in videoInfo.subtitles" 
                   :key="sub.language"
-                  class="flex items-center gap-2 px-3 py-2 rounded-md cursor-pointer transition-colors"
-                  :class="selectedSubtitles.includes(sub.language) ? 'bg-primary-container border border-primary/40' : 'bg-surface-container-lowest border border-outline-variant/30 hover:border-primary/40'"
+                  class="flex cursor-pointer items-center gap-2 rounded-lg px-3 py-2 transition-colors"
+                  :class="selectedSubtitles.includes(sub.language) ? 'border border-primary/45 bg-primary-container shadow-sm' : 'border border-outline-variant/30 bg-surface-container-lowest hover:border-primary/40'"
                   @click="selectSubtitle(sub.language)"
                 >
                   <div 
@@ -270,7 +288,7 @@
             
             <!-- Download Button -->
             <button 
-              class="w-full flex items-center justify-center gap-2 rounded-md h-12 font-headline font-bold text-base shadow-md hover:shadow-lg transition-all duration-200 mt-4 bg-primary text-on-primary disabled:opacity-50 disabled:cursor-not-allowed"
+              class="mt-4 flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-primary text-base font-bold text-on-primary shadow-md transition-all duration-200 hover:bg-primary-dim hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
               :disabled="(!selectedFormat && !selectedAudioFormat && selectedSubtitles.length === 0) || isDownloading"
               @click="startDownload"
             >
@@ -306,15 +324,19 @@
     </section>
     
     <!-- Right Panel - Task Queue -->
-    <section class="w-[38%] bg-surface-container-low flex flex-col pt-6 px-5 pb-6 shadow-ambient z-10 border-l border-outline-variant/40">
+    <section class="z-10 flex w-[37%] flex-col bg-surface-container-low/94 px-5 pb-6 pt-6 shadow-ambient">
       <div class="flex items-center justify-between mb-4">
-        <h2 class="font-headline text-base font-bold text-on-surface">任务队列</h2>
+        <div>
+          <h2 class="font-headline text-base font-bold text-on-surface">任务队列</h2>
+          <p class="mt-0.5 text-xs text-on-surface-variant">下载进度、日志和文件位置</p>
+        </div>
         <div class="flex items-center gap-2">
-          <span class="text-xs font-mono font-bold text-on-secondary-container bg-secondary-container px-2 py-1 rounded-sm">
+          <span class="rounded-md bg-secondary-container px-2.5 py-1 text-xs font-bold text-on-secondary-container">
             {{ activeTaskCount }} 进行中
           </span>
           <button 
-            class="p-1.5 text-on-surface-variant hover:text-on-surface rounded-sm hover:bg-surface-container-highest transition-colors"
+            class="rounded-md p-1.5 text-on-surface-variant transition-colors hover:bg-surface-container-highest hover:text-on-surface"
+            title="清理已完成任务"
             @click="clearCompletedTasks"
           >
             <MaterialIcon name="clear_all" :size="18" />
@@ -323,20 +345,20 @@
       </div>
 
       <!-- Process Log -->
-      <div class="mb-4 bg-surface-container-lowest border border-outline-variant/40 rounded-md overflow-hidden shadow-sm">
-        <div class="h-9 px-3 flex items-center justify-between border-b border-outline-variant/10">
+      <div class="pro-panel mb-4 overflow-hidden rounded-lg">
+        <div class="flex h-10 items-center justify-between border-b border-outline-variant/20 px-3">
           <div class="flex items-center gap-2">
             <MaterialIcon name="terminal" :size="16" class="text-primary" />
             <span class="font-headline text-sm font-semibold text-on-surface">执行过程</span>
           </div>
           <button
-            class="text-xs text-on-surface-variant hover:text-on-surface transition-colors"
+            class="rounded-md px-2 py-1 text-xs text-on-surface-variant transition-colors hover:bg-surface-container-low hover:text-on-surface"
             @click="clearProcessLogs"
           >
             清空
           </button>
         </div>
-        <div class="h-44 overflow-y-auto px-3 py-2.5 font-mono text-[11px] leading-relaxed">
+        <div class="h-44 overflow-y-auto bg-surface-container-low/45 px-3 py-2.5 font-mono text-[11px] leading-relaxed">
           <div v-if="processLogs.length === 0" class="h-full flex items-center justify-center text-on-surface-variant/70">
             解析或下载时会显示详细过程
           </div>
@@ -361,20 +383,22 @@
       
       <!-- Task List -->
       <div class="flex flex-col gap-3 overflow-y-auto pr-1 pb-4">
-        <div v-if="downloadTasks.length === 0" class="flex flex-col items-center justify-center py-12 text-on-surface-variant">
-          <MaterialIcon name="download_for_offline" :size="48" class="mb-3 opacity-30" />
-          <p class="text-sm">暂无下载任务</p>
-          <p class="text-xs mt-1 opacity-70">解析视频后点击下载按钮添加任务</p>
+        <div v-if="downloadTasks.length === 0" class="subtle-panel flex flex-col items-center justify-center rounded-lg py-12 text-on-surface-variant">
+          <div class="mb-3 flex size-14 items-center justify-center rounded-lg bg-surface-container-lowest">
+            <MaterialIcon name="download_for_offline" :size="34" class="opacity-45" />
+          </div>
+          <p class="text-sm font-semibold text-on-surface">暂无下载任务</p>
+          <p class="mt-1 text-xs opacity-75">解析视频后点击下载按钮添加任务</p>
         </div>
         
         <div 
           v-for="task in downloadTasks" 
           :key="task.id"
-          class="flex flex-col p-3 rounded-md border transition-all"
+          class="flex flex-col rounded-lg border p-3 transition-all"
           :class="{
-            'bg-surface-container-lowest shadow-sm border-outline-variant/10': task.status === 'downloading' || task.status === 'merging',
-            'bg-surface-container-lowest border-outline-variant/10 opacity-70': task.status === 'pending',
-            'bg-surface-container-highest/60 border-outline-variant/5': task.status === 'completed',
+            'bg-surface-container-lowest shadow-sm border-primary/20': task.status === 'downloading' || task.status === 'merging',
+            'bg-surface-container-lowest border-outline-variant/25 opacity-80': task.status === 'pending',
+            'bg-surface-container-highest/55 border-outline-variant/15': task.status === 'completed',
             'bg-error-container/10 border-error/20': task.status === 'error',
             'bg-amber-container/20 border-amber/30': task.status === 'paused'
           }"
@@ -382,7 +406,7 @@
           <div class="flex gap-3">
             <!-- Thumbnail -->
             <div 
-              class="w-20 h-14 rounded-sm bg-surface-variant bg-cover bg-center flex-shrink-0 relative overflow-hidden"
+              class="relative h-14 w-20 flex-shrink-0 overflow-hidden rounded-md bg-surface-variant bg-cover bg-center shadow-sm"
               :style="{ backgroundImage: `url(${task.videoInfo.thumbnail})` }"
             >
               <div v-if="task.videoInfo.duration" class="absolute bottom-1 right-1 bg-inverse-surface/80 text-inverse-on-surface text-[11px] font-mono px-1 rounded-sm">
@@ -507,7 +531,7 @@
       </div>
       
       <!-- Storage Info -->
-      <div class="mt-auto pt-4 border-t border-outline-variant/10 flex items-center justify-between gap-3 text-xs text-on-surface-variant">
+      <div class="mt-auto flex items-center justify-between gap-3 border-t border-outline-variant/20 pt-4 text-xs text-on-surface-variant">
         <div class="flex items-center gap-2">
           <MaterialIcon name="storage" :size="14" />
           <span>存储空间: {{ storageInfo }}</span>
@@ -726,9 +750,8 @@ onUnmounted(() => {
 const downloadTasks = ref<DownloadTask[]>([])
 const downloadDir = ref('')
 
-// 清理非法文件名字符
+// 清理 macOS 文件名非法字符
 function sanitizeFilename(filename: string): string {
-  // 替换 Windows 和 Unix 中的非法字符
   return filename.replace(/[<>"/\\|?*]/g, '_').trim()
 }
 
@@ -890,9 +913,9 @@ async function parseVideo() {
     } else if (errorMsg.includes('network') || errorMsg.includes('timeout')) {
       errorMsg = '网络连接超时，请检查网络后重试'
     } else if (errorMsg.includes('ffmpeg') || errorMsg.includes('FFmpeg')) {
-      errorMsg = 'FFmpeg 未找到，请确保 ffmpeg.exe 存在于程序目录'
+      errorMsg = 'FFmpeg 未找到，请确保 ffmpeg 存在于应用资源目录'
     } else if (errorMsg.toLowerCase().includes('yt-dlp') && (errorMsg.includes('not found') || errorMsg.includes('未找到') || errorMsg.includes('cannot find') || errorMsg.includes('enoent'))) {
-      errorMsg = 'yt-dlp 未找到，请确保 yt-dlp.exe 存在于程序目录'
+      errorMsg = 'yt-dlp 未找到，请确保 yt-dlp 存在于应用资源目录'
     } else if (!errorMsg || errorMsg === '解析失败') {
       errorMsg = '无法解析该链接，请检查链接是否正确或尝试其他视频'
     }
@@ -1113,7 +1136,7 @@ async function processDownload(task: DownloadTask) {
     } else if (errorMsg.includes('network') || errorMsg.includes('timeout') || errorMsg.includes('ECONNRESET')) {
       errorMsg = '网络连接中断，请检查网络后重试'
     } else if (errorMsg.includes('ffmpeg') || errorMsg.includes('FFmpeg')) {
-      errorMsg = 'FFmpeg 合并失败，请确保 ffmpeg.exe 存在于程序目录'
+      errorMsg = 'FFmpeg 合并失败，请确保 ffmpeg 存在于应用资源目录'
     } else if (errorMsg.includes('cancel') || errorMsg.includes('abort')) {
       errorMsg = '下载已取消'
     }

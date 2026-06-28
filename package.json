@@ -41,13 +41,13 @@
     },
     "files": [
       "dist/**/*",
-      "dist-electron/**/*"
+      "dist-electron/**/*",
+      "yt-dlp",
+      "yt-dlp.pyz",
+      "ffmpeg",
+      "node"
     ],
     "asar": true,
-    "asarUnpack": [
-      "**/yt-dlp.exe",
-      "**/ffmpeg.exe"
-    ],
     "extraFiles": [
       {
         "from": "./node_modules/electron/dist/locales",
@@ -62,28 +62,32 @@
     ],
     "extraResources": [
       {
-        "from": "./yt-dlp.exe",
-        "to": "./yt-dlp.exe"
+        "from": "./yt-dlp",
+        "to": "./yt-dlp"
       },
       {
-        "from": "./ffmpeg.exe",
-        "to": "./ffmpeg.exe"
+        "from": "./yt-dlp.pyz",
+        "to": "./yt-dlp.pyz"
+      },
+      {
+        "from": "./ffmpeg",
+        "to": "./ffmpeg"
+      },
+      {
+        "from": "./node",
+        "to": "./node"
+      },
+      {
+        "from": "./build/python-runtime/python",
+        "to": "./python"
       }
     ],
-    "win": {
+    "mac": {
       "target": [
-        {
-          "target": "nsis",
-          "arch": [
-            "x64"
-          ]
-        }
-      ]
-    },
-    "nsis": {
-      "oneClick": false,
-      "allowToChangeInstallationDirectory": true,
-      "createDesktopShortcut": true
+        "dmg"
+      ],
+      "identity": null,
+      "artifactName": "${productName}-Mac-${version}-Installer.${ext}"
     },
     "npmRebuild": false,
     "nodeGypRebuild": false,

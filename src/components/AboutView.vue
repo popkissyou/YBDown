@@ -1,7 +1,7 @@
 <template>
-  <div class="flex-1 overflow-y-auto bg-background">
+  <div class="app-workspace flex-1 overflow-y-auto">
     <div class="mx-auto flex w-full max-w-3xl flex-col gap-5 px-8 py-8 pb-10">
-      <section class="rounded-lg border border-outline-variant/45 bg-surface-container-lowest p-6 shadow-ambient">
+      <section class="pro-panel rounded-lg p-6">
         <div class="flex items-start justify-between gap-5">
           <div class="min-w-0">
             <p class="text-sm font-medium text-primary">关于</p>
@@ -11,7 +11,7 @@
             </p>
           </div>
           <button
-            class="flex h-10 min-w-[118px] shrink-0 items-center justify-center gap-2 rounded-md bg-primary px-4 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-dim disabled:opacity-60"
+            class="flex h-10 min-w-[118px] shrink-0 items-center justify-center gap-2 rounded-lg bg-primary px-4 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-dim disabled:opacity-60"
             :disabled="checkingUpdate"
             @click="checkUpdate"
           >
@@ -21,15 +21,15 @@
         </div>
 
         <div class="mt-6 flex flex-wrap gap-3">
-          <div class="rounded-md border border-outline-variant/30 bg-surface-container-low px-4 py-3">
+          <div class="rounded-lg border border-outline-variant/30 bg-surface-container-low px-4 py-3">
             <p class="text-sm text-on-surface-variant">版本</p>
             <p class="mt-1 font-mono text-base font-semibold text-on-surface">v{{ displayVersion }}</p>
           </div>
-          <div class="rounded-md border border-outline-variant/30 bg-surface-container-low px-4 py-3">
+          <div class="rounded-lg border border-outline-variant/30 bg-surface-container-low px-4 py-3">
             <p class="text-sm text-on-surface-variant">运行方式</p>
             <p class="mt-1 text-base font-semibold text-on-surface">本地处理</p>
           </div>
-          <div class="rounded-md border border-outline-variant/30 bg-surface-container-low px-4 py-3">
+          <div class="rounded-lg border border-outline-variant/30 bg-surface-container-low px-4 py-3">
             <p class="text-sm text-on-surface-variant">协议</p>
             <p class="mt-1 text-base font-semibold text-on-surface">MIT</p>
           </div>
@@ -55,7 +55,7 @@
 
       <section class="grid grid-cols-1 gap-4 md:grid-cols-2">
         <button
-          class="group rounded-lg border border-outline-variant/45 bg-surface-container-lowest p-4 text-left shadow-sm transition-colors hover:bg-surface-container-low"
+          class="pro-panel group rounded-lg p-4 text-left transition-colors hover:bg-surface-container-lowest"
           @click="openExternal(githubUrl)"
         >
           <div class="flex items-center justify-between gap-3">
@@ -73,7 +73,7 @@
         </button>
 
         <button
-          class="group rounded-lg border border-outline-variant/45 bg-surface-container-lowest p-4 text-left shadow-sm transition-colors hover:bg-surface-container-low"
+          class="pro-panel group rounded-lg p-4 text-left transition-colors hover:bg-surface-container-lowest"
           @click="openExternal(`${githubUrl}/issues`)"
         >
           <div class="flex items-center justify-between gap-3">
@@ -91,7 +91,7 @@
         </button>
       </section>
 
-      <section class="rounded-lg border border-outline-variant/45 bg-surface-container-lowest p-5 shadow-sm">
+      <section class="pro-panel rounded-lg p-5">
         <div class="flex items-start gap-5">
           <div class="rounded-md border border-outline-variant/40 bg-white p-2">
             <img :src="qrImage" alt="赞赏二维码" class="size-32 rounded-sm object-cover" />
@@ -105,7 +105,7 @@
         </div>
       </section>
 
-      <section class="rounded-lg border border-outline-variant/45 bg-surface-container-low p-5">
+      <section class="subtle-panel rounded-lg p-5">
         <div class="flex items-start gap-3">
           <MaterialIcon name="privacy_tip" :size="20" class="mt-0.5 shrink-0 text-primary" />
           <div>

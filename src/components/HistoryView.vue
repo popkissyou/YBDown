@@ -1,5 +1,5 @@
 <template>
-  <div class="flex-1 flex flex-col bg-surface p-8 overflow-hidden">
+  <div class="app-workspace flex-1 flex flex-col overflow-hidden p-8">
     <div class="max-w-4xl mx-auto w-full flex flex-col gap-6 h-full">
       <!-- Header -->
       <div class="flex items-center justify-between">
@@ -9,7 +9,7 @@
         </div>
         <button 
           v-if="history.length > 0"
-          class="flex items-center gap-2 px-4 py-2 rounded-md bg-surface-container-highest text-on-surface font-headline text-sm font-medium hover:bg-surface-variant transition-colors"
+          class="flex items-center gap-2 rounded-lg border border-outline-variant/35 bg-surface-container-lowest px-4 py-2 text-sm font-semibold text-on-surface shadow-sm transition-colors hover:bg-surface-container-high"
           @click="clearAllHistory"
         >
           <MaterialIcon name="delete_sweep" :size="18" />
@@ -29,7 +29,7 @@
           <div 
             v-for="item in history" 
             :key="item.id"
-            class="group flex gap-3 rounded-md border border-outline-variant/20 bg-surface-container-lowest p-2.5 shadow-sm transition-colors hover:border-primary/30 hover:bg-surface-container-low"
+            class="pro-panel group flex gap-3 rounded-lg p-3 transition-colors hover:border-primary/30 hover:bg-surface-container-lowest"
           >
             <!-- Thumbnail -->
             <div 
