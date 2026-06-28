@@ -1,28 +1,41 @@
 // @see - https://www.electron.build/configuration/configuration
 {
   "$schema": "https://raw.githubusercontent.com/electron-userland/electron-builder/master/packages/app-builder-lib/scheme.json",
-  "appId": "com.videdown.app",
+  "appId": "com.popkissyou.ybdown",
   "asar": true,
-  "productName": "Videdown",
-  "icon": "ldstore.ico",
+  "productName": "YBDown",
+  "electronDist": "build/electron-dist",
   "directories": {
     "output": "release/${version}"
   },
   "files": [
     "dist",
     "dist-electron",
-    "yt-dlp.exe",
-    "ffmpeg.exe",
-    "ldstore.ico"
+    "yt-dlp",
+    "yt-dlp.pyz",
+    "ffmpeg",
+    "node"
   ],
   "extraResources": [
     {
-      "from": "./yt-dlp.exe",
-      "to": "./yt-dlp.exe"
+      "from": "./yt-dlp",
+      "to": "./yt-dlp"
     },
     {
-      "from": "./ffmpeg.exe",
-      "to": "./ffmpeg.exe"
+      "from": "./yt-dlp.pyz",
+      "to": "./yt-dlp.pyz"
+    },
+    {
+      "from": "./ffmpeg",
+      "to": "./ffmpeg"
+    },
+    {
+      "from": "./node",
+      "to": "./node"
+    },
+    {
+      "from": "./build/python-runtime/python",
+      "to": "./python"
     }
   ],
   "npmRebuild": false,
@@ -30,6 +43,7 @@
     "target": [
       "dmg"
     ],
+    "identity": null,
     "artifactName": "${productName}-Mac-${version}-Installer.${ext}"
   },
   "win": {
@@ -41,7 +55,6 @@
         ]
       }
     ],
-    "icon": "ldstore.ico",
     "artifactName": "${productName}.Setup.${version}.${ext}"
   },
   "nsis": {

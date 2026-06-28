@@ -1,126 +1,139 @@
 <template>
-  <div class="flex-1 flex flex-col bg-surface p-8 overflow-y-auto">
-    <div class="max-w-2xl mx-auto w-full flex flex-col gap-6 pb-8">
-      <!-- Header -->
-      <div>
-        <h1 class="font-headline text-2xl font-bold leading-tight text-on-surface">设置</h1>
-        <p class="text-on-surface-variant text-sm mt-1">配置下载偏好和应用程序选项</p>
+  <div class="flex-1 overflow-y-auto bg-background">
+    <div class="mx-auto flex w-full max-w-3xl flex-col gap-5 px-8 py-8 pb-10">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <p class="text-sm font-medium text-primary">设置</p>
+          <h1 class="mt-2 font-headline text-3xl font-semibold text-on-surface">偏好设置</h1>
+          <p class="mt-2 text-base text-on-surface-variant">管理下载目录、文件命名和登录态文件。</p>
+        </div>
+        <div v-if="savedMessage" class="max-w-xs rounded-md border border-outline-variant/40 bg-surface-container-lowest px-4 py-2 text-sm leading-6 text-primary shadow-sm">
+          {{ savedMessage }}
+        </div>
       </div>
-      
-      <!-- Settings Sections -->
-      <div class="flex flex-col gap-6">
-        <!-- Download Settings -->
-        <div class="bg-surface-container-low rounded-lg p-6 border border-outline-variant/10">
-          <h2 class="font-headline text-base font-bold text-on-surface mb-4 flex items-center gap-2">
-            <MaterialIcon name="download" :size="20" class="text-primary" />
-            下载设置
-          </h2>
-          
-          <div class="flex flex-col gap-4">
-            <!-- Download Path -->
-            <div class="flex flex-col gap-2">
-              <label class="text-sm font-medium text-on-surface">默认下载目录</label>
-              <div class="flex gap-2">
-                <input 
-                  v-model="settings.downloadDir"
-                  type="text"
-                  readonly
-                  class="flex-1 px-3 py-2 bg-surface-container-highest border border-outline-variant/20 rounded-md text-sm text-on-surface focus:outline-none focus:border-primary/40"
-                />
-                <button 
-                  class="px-4 py-2 bg-surface-container-highest text-on-surface rounded-md text-sm font-medium hover:bg-surface-variant transition-colors border border-outline-variant/20"
-                  @click="selectDownloadDir"
-                >
-                  选择目录
-                </button>
+
+      <section class="rounded-lg border border-outline-variant/45 bg-surface-container-lowest shadow-ambient">
+        <div class="border-b border-outline-variant/30 p-5">
+          <div class="flex items-start justify-between gap-4">
+            <div class="flex min-w-0 items-start gap-3">
+              <div class="flex size-10 shrink-0 items-center justify-center rounded-md bg-surface-container-high text-primary">
+                <MaterialIcon name="folder" :size="20" />
+              </div>
+              <div class="min-w-0">
+                <h2 class="text-base font-semibold text-on-surface">下载位置</h2>
+                <p class="mt-1 text-sm leading-6 text-on-surface-variant">默认目录会跟随当前 macOS 用户自动生成，不会固定在你的电脑用户名下面。</p>
               </div>
             </div>
-            
-            <!-- Filename Template -->
-            <div class="flex flex-col gap-2">
-              <label class="text-sm font-medium text-on-surface">文件名模板</label>
-              <input 
+            <button
+              class="h-10 shrink-0 rounded-md border border-outline-variant/40 bg-surface-container-low px-4 text-sm font-semibold text-on-surface transition-colors hover:bg-surface-container-high"
+              @click="resetDownloadDir"
+            >
+              使用默认
+            </button>
+          </div>
+
+          <div class="mt-5 flex gap-3">
+            <input
+              v-model="settings.downloadDir"
+              type="text"
+              readonly
+              class="min-w-0 flex-1 truncate rounded-md border border-outline-variant/30 bg-surface-container-low px-3 py-2.5 font-mono text-sm text-on-surface focus:border-primary focus:outline-none"
+            />
+            <button
+              class="h-11 shrink-0 rounded-md bg-primary px-5 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-dim"
+              @click="selectDownloadDir"
+            >
+              选择目录
+            </button>
+          </div>
+        </div>
+
+        <div class="border-b border-outline-variant/30 p-5">
+          <div class="flex items-start gap-3">
+            <div class="flex size-10 shrink-0 items-center justify-center rounded-md bg-surface-container-high text-primary">
+              <MaterialIcon name="drive_file_rename_outline" :size="20" />
+            </div>
+            <div class="min-w-0 flex-1">
+              <h2 class="text-base font-semibold text-on-surface">文件名模板</h2>
+              <p class="mt-1 text-sm leading-6 text-on-surface-variant">支持标题、ID、上传者变量。</p>
+              <input
                 v-model="settings.filenameTemplate"
                 type="text"
-                class="px-3 py-2 bg-surface-container-highest border border-outline-variant/20 rounded-md text-sm text-on-surface focus:outline-none focus:border-primary/40"
-                placeholder="%(title)s.%(ext)s"
+                class="mt-4 w-full rounded-md border border-outline-variant/30 bg-surface-container-low px-3 py-2.5 font-mono text-sm text-on-surface focus:border-primary focus:outline-none"
+                placeholder="%(title)s"
               />
-              <p class="text-[11px] text-on-surface-variant">
-                可用变量: %(title)s - 标题, %(id)s - 视频ID, %(uploader)s - 上传者
-              </p>
-            </div>
-            
-            <!-- Cookies File -->
-            <div class="flex flex-col gap-2">
-              <label class="text-sm font-medium text-on-surface">设置Cookies 文件</label>
-              <div class="flex gap-2">
-                <input 
-                  v-model="settings.cookiesFile"
-                  type="text"
-                  readonly
-                  placeholder="选择 cookies.txt 文件（用于 YouTube 登录）"
-                  class="flex-1 px-3 py-2 bg-surface-container-highest border border-outline-variant/20 rounded-md text-sm text-on-surface focus:outline-none focus:border-primary/40"
-                />
-                <button 
-                  class="px-4 py-2 bg-surface-container-highest text-on-surface rounded-md text-sm font-medium hover:bg-surface-variant transition-colors border border-outline-variant/20"
-                  @click="selectCookiesFile"
-                >
-                  选择文件
-                </button>
-                <button 
-                  v-if="settings.cookiesFile"
-                  class="px-4 py-2 bg-error-container text-on-error-container rounded-md text-sm font-medium hover:bg-error transition-colors hover:text-on-error border border-outline-variant/20"
-                  @click="clearCookiesFile"
-                >
-                  清除
-                </button>
-              </div>
-              <p class="text-[11px] text-on-surface-variant">
-                用于下载B站和YouTube 视频。可使用 Chrome 扩展 "Get cookies.txt" 导出
-              </p>
+              <p class="mt-2 text-sm text-on-surface-variant">可用变量：%(title)s / %(id)s / %(uploader)s</p>
             </div>
           </div>
         </div>
-        
-        <!-- Quality Settings -->
-        <div class="bg-surface-container-low rounded-lg p-6 border border-outline-variant/10">
-          <h2 class="font-headline text-base font-bold text-on-surface mb-4 flex items-center gap-2">
-            <MaterialIcon name="high_quality" :size="20" class="text-primary" />
-            画质偏好
-          </h2>
-          
-          <div class="flex flex-col gap-3">
-            <label 
-              v-for="quality in qualityOptions" 
-              :key="quality.value"
-              class="flex items-center gap-3 p-3 rounded-md cursor-pointer transition-colors hover:bg-surface-container-highest"
-            >
-              <div 
-                class="size-4 rounded-full border-2 flex items-center justify-center"
-                :class="settings.preferredQuality === quality.value ? 'border-primary' : 'border-outline-variant'"
+
+        <div class="border-b border-outline-variant/30 p-5">
+          <div class="flex items-start gap-3">
+            <div class="flex size-10 shrink-0 items-center justify-center rounded-md bg-surface-container-high text-primary">
+              <MaterialIcon name="high_quality" :size="20" />
+            </div>
+            <div class="min-w-0 flex-1">
+              <h2 class="text-base font-semibold text-on-surface">画质偏好</h2>
+              <p class="mt-1 text-sm leading-6 text-on-surface-variant">解析后仍可手动选择具体格式。</p>
+              <div class="mt-4 grid grid-cols-2 gap-2 md:grid-cols-4">
+                <label
+                  v-for="quality in qualityOptions"
+                  :key="quality.value"
+                  class="flex h-10 cursor-pointer items-center justify-center rounded-md border text-sm font-semibold transition-colors"
+                  :class="settings.preferredQuality === quality.value ? 'border-primary bg-primary-container text-on-primary-container' : 'border-outline-variant/40 bg-surface-container-low text-on-surface-variant hover:text-on-surface'"
+                >
+                  <input v-model="settings.preferredQuality" type="radio" :value="quality.value" class="hidden" />
+                  {{ quality.label }}
+                </label>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-5">
+          <div class="flex items-start justify-between gap-4">
+            <div class="flex min-w-0 items-start gap-3">
+              <div class="flex size-10 shrink-0 items-center justify-center rounded-md bg-surface-container-high text-primary">
+                <MaterialIcon name="key" :size="20" />
+              </div>
+              <div class="min-w-0">
+                <h2 class="text-base font-semibold text-on-surface">Cookies 文件</h2>
+                <p class="mt-1 text-sm leading-6 text-on-surface-variant">用于 YouTube、B站、Instagram 等需要登录态的平台。</p>
+              </div>
+            </div>
+            <div class="flex shrink-0 gap-2">
+              <button
+                v-if="settings.cookiesFile"
+                class="h-10 rounded-md border border-outline-variant/40 bg-surface-container-low px-4 text-sm font-semibold text-on-surface transition-colors hover:bg-surface-container-high"
+                @click="clearCookiesFile"
               >
-                <div v-if="settings.preferredQuality === quality.value" class="size-2 rounded-full bg-primary" />
-              </div>
-              <input 
-                v-model="settings.preferredQuality"
-                type="radio"
-                :value="quality.value"
-                class="hidden"
-              />
-              <span class="text-sm text-on-surface">{{ quality.label }}</span>
-            </label>
+                清除
+              </button>
+              <button
+                class="h-10 rounded-md bg-primary px-4 text-sm font-semibold text-on-primary transition-colors hover:bg-primary-dim"
+                @click="selectCookiesFile"
+              >
+                选择文件
+              </button>
+            </div>
           </div>
+          <input
+            v-model="settings.cookiesFile"
+            type="text"
+            readonly
+            placeholder="未选择 cookies.txt"
+            class="mt-5 w-full truncate rounded-md border border-outline-variant/30 bg-surface-container-low px-3 py-2.5 font-mono text-sm text-on-surface placeholder:text-on-surface-variant/60 focus:border-primary focus:outline-none"
+          />
         </div>
-        
-        <!-- Save Button -->
-        <button 
-          class="w-full flex items-center justify-center gap-2 rounded-xl h-12 font-headline font-bold text-base shadow-md hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 text-on-primary-fixed gradient-btn-orange"
-          @click="saveSettings"
-        >
-          <MaterialIcon name="save" :size="20" />
-          <span>保存设置</span>
-        </button>
-      </div>
+      </section>
+
+      <button
+        class="flex h-12 items-center justify-center gap-2 rounded-md bg-primary text-base font-semibold text-on-primary shadow-sm transition-colors hover:bg-primary-dim"
+        @click="saveSettings()"
+      >
+        <MaterialIcon name="save" :size="20" />
+        <span>保存设置</span>
+      </button>
     </div>
   </div>
 </template>
@@ -138,68 +151,76 @@ interface Settings {
 
 const settings = ref<Settings>({
   downloadDir: '',
-  filenameTemplate: '%(title)s.%(ext)s',
+  filenameTemplate: '%(title)s',
   preferredQuality: 'best',
   cookiesFile: '',
 })
 
-const ytdlpVersion = ref('检测中...')
+const savedMessage = ref('')
 
 const qualityOptions = [
-  { value: 'best', label: '最佳画质 (推荐)' },
-  { value: '1080p', label: '1080P 高清' },
-  { value: '720p', label: '720P 标清' },
-  { value: '480p', label: '480P 流畅' },
+  { value: 'best', label: '最佳' },
+  { value: '1080p', label: '1080P' },
+  { value: '720p', label: '720P' },
+  { value: '480p', label: '480P' },
 ]
 
 async function selectDownloadDir() {
   const dir = await window.electronAPI.dialog.selectFolder()
   if (dir) {
     settings.value.downloadDir = dir
-    // 自动保存设置
-    localStorage.setItem('settings', JSON.stringify(settings.value))
+    saveSettings('下载目录已更新')
   }
+}
+
+async function resetDownloadDir() {
+  settings.value.downloadDir = await window.electronAPI.app.getDefaultDownloadDir()
+  saveSettings('已切换到默认目录')
 }
 
 async function selectCookiesFile() {
   const file = await window.electronAPI.dialog.selectFile()
   if (file) {
     settings.value.cookiesFile = file
-    // 自动保存设置
-    localStorage.setItem('settings', JSON.stringify(settings.value))
+    saveSettings('Cookies 文件已更新')
   }
 }
 
 function clearCookiesFile() {
   settings.value.cookiesFile = ''
-  // 自动保存设置
-  localStorage.setItem('settings', JSON.stringify(settings.value))
+  saveSettings('Cookies 文件已清除')
 }
 
-function saveSettings() {
+function saveSettings(message = '设置已保存') {
   localStorage.setItem('settings', JSON.stringify(settings.value))
-  alert('设置已保存')
+  savedMessage.value = message
+  window.setTimeout(() => {
+    savedMessage.value = ''
+  }, 1800)
 }
 
 async function loadSettings() {
-  // Load saved settings first
   const saved = localStorage.getItem('settings')
   if (saved) {
-    const parsed = JSON.parse(saved)
-    settings.value = { ...settings.value, ...parsed }
+    try {
+      const parsed = JSON.parse(saved)
+      settings.value = { ...settings.value, ...parsed }
+    } catch {
+      localStorage.removeItem('settings')
+    }
   }
-  
-  // If no download dir set, use default
+
+  if (settings.value.downloadDir) {
+    const exists = await window.electronAPI.app.pathExists(settings.value.downloadDir)
+    if (!exists) {
+      settings.value.downloadDir = await window.electronAPI.app.getDefaultDownloadDir()
+      saveSettings('已修复下载目录')
+      return
+    }
+  }
+
   if (!settings.value.downloadDir) {
     settings.value.downloadDir = await window.electronAPI.app.getDefaultDownloadDir()
-  }
-  
-  // Check YT-DLP version
-  try {
-    // This would need a new IPC handler to get version
-    ytdlpVersion.value = '已安装'
-  } catch (e) {
-    ytdlpVersion.value = '未知'
   }
 }
 

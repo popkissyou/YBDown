@@ -25,23 +25,23 @@
           <p class="text-sm mt-2 opacity-70">下载的视频将显示在这里</p>
         </div>
         
-        <div v-else class="grid grid-cols-1 gap-4">
+        <div v-else class="grid grid-cols-1 gap-2.5">
           <div 
             v-for="item in history" 
             :key="item.id"
-            class="flex gap-4 p-4 bg-surface-container-low rounded-lg border border-outline-variant/10 hover:border-primary/30 transition-colors group"
+            class="group flex gap-3 rounded-md border border-outline-variant/20 bg-surface-container-lowest p-2.5 shadow-sm transition-colors hover:border-primary/30 hover:bg-surface-container-low"
           >
             <!-- Thumbnail -->
             <div 
-              class="w-32 h-20 rounded-md bg-surface-variant bg-cover bg-center flex-shrink-0 relative overflow-hidden"
+              class="relative h-14 w-24 flex-shrink-0 overflow-hidden rounded-md bg-surface-variant bg-cover bg-center"
               :style="{ backgroundImage: `url(${item.thumbnail})` }"
             >
               <div class="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors flex items-center justify-center">
                 <button 
-                  class="opacity-0 group-hover:opacity-100 transition-opacity p-2 bg-primary/90 rounded-full text-on-primary"
+                  class="rounded-full bg-primary/90 p-1.5 text-on-primary opacity-0 transition-opacity group-hover:opacity-100"
                   @click="openFile(item)"
                 >
-                  <MaterialIcon name="play_arrow" :size="20" />
+                  <MaterialIcon name="play_arrow" :size="18" />
                 </button>
               </div>
             </div>
@@ -49,43 +49,43 @@
             <!-- Info -->
             <div class="flex-1 flex flex-col justify-between min-w-0">
               <div>
-                <h4 class="font-headline text-sm font-bold text-on-surface line-clamp-2">{{ item.title }}</h4>
-                <p class="text-xs text-on-surface-variant mt-1 font-mono">{{ item.url }}</p>
+                <h4 class="truncate font-headline text-sm font-semibold text-on-surface">{{ item.title }}</h4>
+                <p class="mt-0.5 truncate font-mono text-[11px] text-on-surface-variant">{{ item.url }}</p>
               </div>
-              <div class="flex items-center gap-4 text-[11px] text-on-surface-variant">
+              <div class="mt-1.5 flex items-center gap-3 text-[11px] text-on-surface-variant">
                 <span class="flex items-center gap-1">
-                  <MaterialIcon name="high_definition" :size="14" />
+                  <MaterialIcon name="high_definition" :size="13" />
                   {{ item.quality }}
                 </span>
                 <span class="flex items-center gap-1">
-                  <MaterialIcon name="schedule" :size="14" />
+                  <MaterialIcon name="schedule" :size="13" />
                   {{ formatDate(item.createdAt) }}
                 </span>
               </div>
             </div>
             
             <!-- Actions -->
-            <div class="flex flex-col gap-2 justify-center">
+            <div class="flex items-center gap-1 self-center">
               <button 
-                class="p-2 text-on-surface-variant hover:text-primary hover:bg-primary-container/20 rounded-md transition-colors"
+                class="rounded-md p-1.5 text-on-surface-variant transition-colors hover:bg-primary-container/20 hover:text-primary"
                 title="打开文件"
                 @click="openFile(item)"
               >
-                <MaterialIcon name="play_circle" :size="20" />
+                <MaterialIcon name="play_circle" :size="18" />
               </button>
               <button 
-                class="p-2 text-on-surface-variant hover:text-primary hover:bg-primary-container/20 rounded-md transition-colors"
+                class="rounded-md p-1.5 text-on-surface-variant transition-colors hover:bg-primary-container/20 hover:text-primary"
                 title="打开所在文件夹"
                 @click="openFolder(item)"
               >
-                <MaterialIcon name="folder_open" :size="20" />
+                <MaterialIcon name="folder_open" :size="18" />
               </button>
               <button 
-                class="p-2 text-on-surface-variant hover:text-error hover:bg-error-container/20 rounded-md transition-colors"
+                class="rounded-md p-1.5 text-on-surface-variant transition-colors hover:bg-error-container/20 hover:text-error"
                 title="删除记录"
                 @click="deleteHistory(item.id)"
               >
-                <MaterialIcon name="delete" :size="20" />
+                <MaterialIcon name="delete" :size="18" />
               </button>
             </div>
           </div>
@@ -96,7 +96,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
 import MaterialIcon from './icons/MaterialIcon.vue'
 import type { HistoryRecord } from '../types'
 
@@ -148,11 +148,22 @@ async function openFile(item: HistoryRecord) {
 }
 
 async function openFolder(item: HistoryRecord) {
-  const path = item.filePath.substring(0, item.filePath.lastIndexOf('\\'))
-  await window.electronAPI.shell.openPath(path)
+  await window.electronAPI.shell.showItemInFolder(item.filePath)
+}
+
+function handleTabChanged(event: Event) {
+  const tab = (event as CustomEvent).detail
+  if (tab === 'history') loadHistory()
 }
 
 onMounted(() => {
   loadHistory()
+  window.addEventListener('history-updated', loadHistory)
+  window.addEventListener('tab-changed', handleTabChanged)
+})
+
+onUnmounted(() => {
+  window.removeEventListener('history-updated', loadHistory)
+  window.removeEventListener('tab-changed', handleTabChanged)
 })
 </script>

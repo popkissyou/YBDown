@@ -15,10 +15,12 @@ interface Window {
     app: {
       getVersion: () => Promise<string>
       getDefaultDownloadDir: () => Promise<string>
+      pathExists: (filePath: string) => Promise<boolean>
       fetchImage: (url: string, referer?: string) => Promise<string>
     }
     shell: {
       openPath: (filePath: string) => Promise<void>
+      showItemInFolder: (filePath: string) => Promise<void>
       openExternal: (url: string) => Promise<void>
     }
     ytdlp: {
@@ -38,6 +40,7 @@ interface Window {
       pauseDownload: (taskId: string) => Promise<boolean>
     }
     onDownloadProgress: (callback: (data: any) => void) => () => void
+    onProcessLog: (callback: (data: any) => void) => () => void
     history: {
       get: () => Promise<any[]>
       add: (record: any) => Promise<boolean>

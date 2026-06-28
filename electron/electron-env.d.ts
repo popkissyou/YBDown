@@ -32,11 +32,14 @@ interface Window {
       selectFolder: () => Promise<string | null>
     }
     app: {
+      getVersion: () => Promise<string>
       getDefaultDownloadDir: () => Promise<string>
+      pathExists: (filePath: string) => Promise<boolean>
       fetchImage: (url: string, referer?: string) => Promise<string>
     }
     shell: {
       openPath: (filePath: string) => Promise<void>
+      showItemInFolder: (filePath: string) => Promise<void>
     }
     ytdlp: {
       parse: (url: string) => Promise<any>

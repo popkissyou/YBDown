@@ -1,22 +1,22 @@
 <div align="center">
-  <h1>Videdown</h1>
+  <h1>YBDown</h1>
 </div>
 
-Videdown 是一款现代化的开源视频下载工具，让你可以从抖音 小红书 B站 YT Instagram等网站下载无水印高清视频。基于 Electron 构建，使用 yt-dlp 作为下载引擎，Videdown 提供了简洁直观的界面和强大的功能，满足你的所有下载需求。
+YBDown 是一款现代化的开源视频下载工具，让你可以从抖音、小红书、B站、YouTube、Instagram 等网站下载视频。基于 Electron 构建，使用 yt-dlp 作为下载引擎。
 
   <p>
-    <a href="https://github.com/cshuangyy/videdown/stargazers"><img src="src/assets/screen.png" alt="Videdown Screenshot" width="98%"></a>
-    <a href="https://github.com/cshuangyy/videdown/releases"><img src="https://img.shields.io/github/downloads/cshuangyy/videdown/total?color=369eff&labelColor=black&logo=github&label=Downloads" /></a>
-    <a href="https://github.com/cshuangyy/videdown/releases/latest"><img src="https://img.shields.io/github/v/release/cshuangyy/videdown?color=369eff&labelColor=black&logo=github&label=Latest%20Release" /></a>
+    <a href="https://github.com/popkissyou/YBDown/stargazers"><img src="src/assets/screen.png" alt="YBDown Screenshot" width="98%"></a>
+    <a href="https://github.com/popkissyou/YBDown/releases"><img src="https://img.shields.io/github/downloads/popkissyou/YBDown/total?color=369eff&labelColor=black&logo=github&label=Downloads" /></a>
+    <a href="https://github.com/popkissyou/YBDown/releases/latest"><img src="https://img.shields.io/github/v/release/popkissyou/YBDown?color=369eff&labelColor=black&logo=github&label=Latest%20Release" /></a>
     <br />
     <br />
   </p>
 
 ## 👋🏻 开始使用
 
-Videdown 目前正在积极开发中，欢迎反馈任何[问题](https://github.com/cshuangyy/videdown/issues)。
+YBDown 目前正在积极开发中，欢迎反馈任何[问题](https://github.com/popkissyou/YBDown/issues)。
 
-[📥 下载 Videdown](https://github.com/cshuangyy/videdown/releases)
+[📥 下载 YBDown](https://github.com/popkissyou/YBDown/releases)
 
 > [!IMPORTANT]
 >
@@ -46,7 +46,7 @@ Videdown 目前正在积极开发中，欢迎反馈任何[问题](https://github
 
 ## 🌐 支持的网站
 
-Videdown 通过 yt-dlp 支持 1000+ 个视频和音频平台。主要支持：
+YBDown 通过 yt-dlp 支持 1000+ 个视频和音频平台。主要支持：
 
 - **国内平台**：抖音、B站（哔哩哔哩）、小红书、快手、西瓜视频
 - **国际平台**：YouTube、Instagram、TikTok、Twitter/X、Facebook
@@ -58,8 +58,8 @@ Videdown 通过 yt-dlp 支持 1000+ 个视频和音频平台。主要支持：
 
 ### 下载安装
 
-1. 访问 [Releases](https://github.com/cshuangyy/videdown/releases) 页面
-2. 下载最新版本的安装程序 `Videdown Setup x.x.x.exe`
+1. 访问 [Releases](https://github.com/popkissyou/YBDown/releases) 页面
+2. 下载最新版本的安装程序
 3. 运行安装程序，按提示完成安装
 4. 安装完成后即可使用
 
@@ -68,8 +68,8 @@ Videdown 通过 yt-dlp 支持 1000+ 个视频和音频平台。主要支持：
 #### 1. 克隆仓库
 
 ```bash
-git clone https://github.com/cshuangyy/videdown.git
-cd videdown
+git clone https://github.com/popkissyou/YBDown.git
+cd YBDown
 ```
 
 #### 2. 下载依赖工具
@@ -152,7 +152,7 @@ pnpm build
 ## 📁 项目结构
 
 ```
-videdown/
+YBDown/
 ├── electron/           # Electron 主进程代码
 │   ├── main.ts        # 主进程入口
 │   └── preload.ts     # 预加载脚本
@@ -174,27 +174,6 @@ videdown/
 4. 推送到分支 (`git push origin feature/AmazingFeature`)
 5. 打开一个 Pull Request
 
-## 💖 支持作者
-
-如果这个项目对你有帮助，可以考虑请作者喝杯咖啡 ☕
-
-<div align="center">
-  <table>
-    <tr>
-      <td align="center">
-        <img src="src/assets/wepay.png" alt="微信支付" width="200">
-        <br>
-        <sub>微信支付</sub>
-      </td>
-      <td align="center">
-        <img src="src/assets/alipay.png" alt="支付宝" width="200">
-        <br>
-        <sub>支付宝</sub>
-      </td>
-    </tr>
-  </table>
-</div>
-
 ## 📄 开源协议
 
 本项目基于 [MIT](LICENSE) 协议开源。
@@ -202,7 +181,7 @@ videdown/
 ```
 MIT License
 
-Copyright (c) 2024 Videdown
+Copyright (c) 2026 YBDown
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -234,4 +213,4 @@ SOFTWARE.
 
 ---
 
-Made with ❤️ by Videdown Team
+Made by popkissyou

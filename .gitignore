@@ -50,6 +50,14 @@ coverage/
 *.exe
 dll/
 
+# Local bundled runtime files for macOS packaging
+build/
+ffmpeg
+node
+yt-dlp
+yt-dlp-arm64
+yt-dlp.pyz
+
 # Temporary files
 *.tmp
 *.temp

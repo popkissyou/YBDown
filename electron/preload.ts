@@ -38,12 +38,14 @@ contextBridge.exposeInMainWorld('electronAPI', {
   app: {
     getVersion: () => ipcRenderer.invoke('app:getVersion'),
     getDefaultDownloadDir: () => ipcRenderer.invoke('app:getDefaultDownloadDir'),
+    pathExists: (filePath: string) => ipcRenderer.invoke('app:pathExists', filePath),
     fetchImage: (url: string, referer?: string) => ipcRenderer.invoke('app:fetchImage', url, referer),
   },
   
   // 系统操作
   shell: {
     openPath: (filePath: string) => ipcRenderer.invoke('shell:openPath', filePath),
+    showItemInFolder: (filePath: string) => ipcRenderer.invoke('shell:showItemInFolder', filePath),
     openExternal: (url: string) => ipcRenderer.invoke('shell:openExternal', url),
   },
   
@@ -61,6 +63,13 @@ contextBridge.exposeInMainWorld('electronAPI', {
     ipcRenderer.on('download:progress', handler)
     return () => {
       ipcRenderer.off('download:progress', handler)
+    }
+  },
+  onProcessLog: (callback: (data: any) => void) => {
+    const handler = (_: any, data: any) => callback(data)
+    ipcRenderer.on('process:log', handler)
+    return () => {
+      ipcRenderer.off('process:log', handler)
     }
   },
   

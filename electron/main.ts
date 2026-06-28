@@ -18,20 +18,50 @@ process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path.join(process.env.APP_ROOT, 
 
 let win: BrowserWindow | null
 
-// 获取 yt-dlp 路径
-function getYtDlpPath(): string {
+// 获取 yt-dlp 启动方式。macOS 的 PyInstaller 版启动很慢，优先使用 Python zipapp。
+function getYtDlpRunner(): { command: string; argsPrefix: string[]; cwd: string } {
+  const isWin = process.platform === 'win32'
+  const ytdlpName = isWin ? 'yt-dlp.exe' : 'yt-dlp'
+  const pythonName = isWin ? 'python.exe' : 'python3'
+  const pythonCandidates = [
+    path.join(process.resourcesPath || '', 'python', 'bin', pythonName),
+    path.join(process.env.APP_ROOT || '', 'build', 'python-runtime', 'python', 'bin', pythonName),
+    path.join(process.cwd(), 'build', 'python-runtime', 'python', 'bin', pythonName),
+  ]
+  const pyzCandidates = [
+    path.join(process.resourcesPath || '', 'yt-dlp.pyz'),
+    path.join(process.env.APP_ROOT || '', 'yt-dlp.pyz'),
+    path.join(process.cwd(), 'yt-dlp.pyz'),
+  ]
+
+  for (const pythonPath of pythonCandidates) {
+    if (!fs.existsSync(pythonPath)) continue
+    const pyzPath = pyzCandidates.find((candidate) => fs.existsSync(candidate))
+    if (pyzPath) {
+      return {
+        command: pythonPath,
+        argsPrefix: [pyzPath],
+        cwd: path.dirname(pyzPath),
+      }
+    }
+  }
+
   const possiblePaths = [
-    path.join(process.env.APP_ROOT, 'yt-dlp.exe'),
-    path.join(process.resourcesPath || '', 'yt-dlp.exe'),
-    path.join(__dirname, '..', '..', 'yt-dlp.exe'),
+    path.join(process.env.APP_ROOT, ytdlpName),
+    path.join(process.resourcesPath || '', ytdlpName),
+    path.join(__dirname, '..', '..', ytdlpName),
+    path.join(process.cwd(), ytdlpName),
+    '/opt/homebrew/bin/yt-dlp',
+    '/usr/local/bin/yt-dlp',
+    ytdlpName,
   ]
   
   for (const p of possiblePaths) {
     if (fs.existsSync(p)) {
-      return p
+      return { command: p, argsPrefix: [], cwd: path.dirname(p) }
     }
   }
-  return 'yt-dlp.exe'
+  return { command: ytdlpName, argsPrefix: [], cwd: process.cwd() }
 }
 
 // 获取 ffmpeg 路径（跨平台）
@@ -48,6 +78,8 @@ function getFfmpegPath(): string {
     path.join(__dirname, '..', '..', ffmpegName),
     // 2. 当前目录
     path.join(process.cwd(), ffmpegName),
+    '/opt/homebrew/bin/ffmpeg',
+    '/usr/local/bin/ffmpeg',
     // 3. 系统 PATH 中的 ffmpeg
     ffmpegName
   ]
@@ -66,10 +98,56 @@ function getFfmpegPath(): string {
   return ffmpegName
 }
 
+function parseYtDlpJsonOutput(output: string, errorOutput: string): any {
+  const trimmed = output.trim()
+
+  if (!trimmed) {
+    const detail = normalizeYtDlpError(errorOutput)
+    throw new Error(detail || 'yt-dlp 没有返回可解析的视频信息')
+  }
+
+  try {
+    return JSON.parse(trimmed)
+  } catch {
+    const lines = trimmed
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter(Boolean)
+
+    for (const line of lines) {
+      if (!line.startsWith('{') || !line.endsWith('}')) continue
+      try {
+        return JSON.parse(line)
+      } catch {
+      }
+    }
+
+    const preview = trimmed.slice(0, 500)
+    const detail = normalizeYtDlpError(errorOutput)
+    throw new Error(detail || `yt-dlp 返回的数据不是有效 JSON：${preview}`)
+  }
+}
+
 // 检查 JS 运行时是否可用
 function checkJsRuntime(): { available: boolean; path: string | null; name: string } {
   const platform = process.platform
   const isWin = platform === 'win32'
+  const nodeName = isWin ? 'node.exe' : 'node'
+  const bundledNodePaths = [
+    path.join(process.resourcesPath || '', nodeName),
+    path.join(process.env.APP_ROOT || '', nodeName),
+    path.join(__dirname, '..', '..', nodeName),
+    path.join(process.cwd(), nodeName),
+  ]
+
+  for (const p of bundledNodePaths) {
+    try {
+      if (fs.existsSync(p)) {
+        return { available: true, path: p, name: 'Node.js' }
+      }
+    } catch {
+    }
+  }
   
   // 1. 首先尝试 Node.js：通过系统命令动态查找，不依赖硬编码路径
   try {
@@ -109,11 +187,14 @@ function checkJsRuntime(): { available: boolean; path: string | null; name: stri
 
 // 弹出提示让用户下载 Node.js
 async function promptNodeDownload(): Promise<void> {
+  const detail = process.platform === 'darwin'
+    ? '当前应用没有检测到可用的 Node.js 运行时。请安装 macOS 版 Node.js 后重试。'
+    : '当前应用没有检测到可用的 Node.js 运行时。请安装适合当前系统的 Node.js 后重试。'
   const result = await dialog.showMessageBox({
     type: 'info',
     title: '需要 Node.js 运行时',
     message: 'YouTube 视频解析需要 Node.js 运行时',
-    detail: '点击"确定"将跳转到 Node.js 下载页面，请下载 Windows Installer (.msi) 版本并安装后重试。',
+    detail,
     buttons: ['确定', '取消'],
     defaultId: 0,
   })
@@ -167,7 +248,7 @@ function isBilibiliUrl(url: string): boolean {
 
 // 默认下载目录
 function getDefaultDownloadDir(): string {
-  return path.join(os.homedir(), 'Downloads', 'Videdown')
+  return path.join(os.homedir(), 'Downloads', 'YBDown')
 }
 
 // 确保下载目录存在
@@ -191,6 +272,20 @@ function sendDownloadProgress(data: any) {
   })
 }
 
+function sendProcessLog(data: { scope: 'parse' | 'download' | 'system'; level?: 'info' | 'warn' | 'error'; message: string; taskId?: string }) {
+  const windows = BrowserWindow.getAllWindows()
+  const payload = {
+    level: 'info',
+    time: new Date().toLocaleTimeString('zh-CN', { hour12: false }),
+    ...data,
+  }
+  windows.forEach(window => {
+    if (!window.isDestroyed()) {
+      window.webContents.send('process:log', payload)
+    }
+  })
+}
+
 function createWindow() {
   win = new BrowserWindow({
     width: 1200,
@@ -198,7 +293,7 @@ function createWindow() {
     minWidth: 1000,
     minHeight: 700,
     titleBarStyle: 'hiddenInset',
-    icon: path.join(process.env.APP_ROOT || '', 'ldstore.ico'),
+    trafficLightPosition: { x: 16, y: 14 },
     webPreferences: {
       preload: path.join(__dirname, 'preload.mjs'),
       contextIsolation: true,
@@ -238,6 +333,18 @@ app.whenReady().then(() => {
 // 创建自定义菜单
 function createMenu() {
   const template: Electron.MenuItemConstructorOptions[] = [
+    ...(process.platform === 'darwin' ? [{
+      label: app.name,
+      submenu: [
+        { role: 'about' as const },
+        { type: 'separator' as const },
+        { role: 'hide' as const },
+        { role: 'hideOthers' as const },
+        { role: 'unhide' as const },
+        { type: 'separator' as const },
+        { role: 'quit' as const },
+      ]
+    }] : []),
     {
       label: '文件',
       submenu: [
@@ -248,6 +355,20 @@ function createMenu() {
             app.quit()
           }
         }
+      ]
+    },
+    {
+      label: '编辑',
+      submenu: [
+        { role: 'undo' },
+        { role: 'redo' },
+        { type: 'separator' },
+        { role: 'cut' },
+        { role: 'copy' },
+        { role: 'paste' },
+        { role: 'pasteAndMatchStyle' },
+        { role: 'delete' },
+        { role: 'selectAll' },
       ]
     },
     {
@@ -284,8 +405,8 @@ function createMenu() {
 }
 
 // GitHub 仓库配置
-const GITHUB_OWNER = 'cshuangyy'
-const GITHUB_REPO = 'videdown'
+const GITHUB_OWNER = 'popkissyou'
+const GITHUB_REPO = 'YBDown'
 
 // 获取应用版本号
 ipcMain.handle('app:getVersion', () => {
@@ -301,7 +422,7 @@ ipcMain.handle('app:checkForUpdates', async () => {
     // 添加 User-Agent 和 Accept 头以避免 API 限制
     const response = await fetch(`https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}/releases/latest`, {
       headers: {
-        'User-Agent': `Videdown/${currentVersion}`,
+        'User-Agent': `YBDown/${currentVersion}`,
         'Accept': 'application/vnd.github.v3+json',
       },
     })
@@ -399,9 +520,23 @@ ipcMain.handle('app:getDefaultDownloadDir', () => {
   return getDefaultDownloadDir()
 })
 
-// 打开下载文件夹
+ipcMain.handle('app:pathExists', async (_, filePath: string) => {
+  if (!filePath) return false
+  try {
+    return fs.existsSync(filePath)
+  } catch {
+    return false
+  }
+})
+
+// 打开文件
 ipcMain.handle('shell:openPath', async (_, filePath: string) => {
-  await shell.openPath(filePath)
+  return shell.openPath(filePath)
+})
+
+// 在文件夹中显示文件
+ipcMain.handle('shell:showItemInFolder', async (_, filePath: string) => {
+  shell.showItemInFolder(filePath)
 })
 
 // 打开外部链接
@@ -594,6 +729,22 @@ function getChromiumPath(): string | null {
 
 // 获取可用的浏览器名称（用于 yt-dlp --cookies-from-browser）
 function getAvailableBrowser(): string {
+  const platform = process.platform
+
+  if (platform === 'darwin') {
+    const macBrowsers = [
+      { name: 'chrome', paths: ['/Applications/Google Chrome.app', path.join(os.homedir(), 'Applications', 'Google Chrome.app')] },
+      { name: 'edge', paths: ['/Applications/Microsoft Edge.app', path.join(os.homedir(), 'Applications', 'Microsoft Edge.app')] },
+      { name: 'brave', paths: ['/Applications/Brave Browser.app', path.join(os.homedir(), 'Applications', 'Brave Browser.app')] },
+      { name: 'firefox', paths: ['/Applications/Firefox.app', path.join(os.homedir(), 'Applications', 'Firefox.app')] },
+      { name: 'safari', paths: ['/Applications/Safari.app'] },
+    ]
+
+    for (const browser of macBrowsers) {
+      if (browser.paths.some((p) => fs.existsSync(p))) return browser.name
+    }
+  }
+
   // 优先检查 Chrome
   const chromePaths = [
     'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
@@ -615,6 +766,103 @@ function getAvailableBrowser(): string {
   }
 
   return ''
+}
+
+function shouldUseCookies(url: string): boolean {
+  const normalizedUrl = url.toLowerCase()
+  return [
+    'youtube.com',
+    'youtu.be',
+    'bilibili.com',
+    'b23.tv',
+    'instagram.com',
+    'tiktok.com',
+    'twitter.com',
+    'x.com',
+    'facebook.com',
+  ].some((domain) => normalizedUrl.includes(domain))
+}
+
+function appendCookieArgs(args: string[], url: string, cookiesFile?: string, options: { includeBrowser?: boolean } = {}): void {
+  if (!shouldUseCookies(url)) return
+
+  if (cookiesFile && fs.existsSync(cookiesFile)) {
+    args.push('--cookies', cookiesFile)
+    return
+  }
+
+  if (options.includeBrowser === false) return
+
+  const browser = getAvailableBrowser()
+  if (browser) args.push('--cookies-from-browser', browser)
+}
+
+function shouldRetryWithBrowserCookies(url: string, cookiesFile: string | undefined, errorOutput: string): boolean {
+  if (cookiesFile || !shouldUseCookies(url)) return false
+
+  const lower = errorOutput.toLowerCase()
+  return (
+    lower.includes('empty media response') ||
+    lower.includes('cookies-from-browser') ||
+    lower.includes('--cookies') ||
+    lower.includes('login') ||
+    lower.includes('authenticated') ||
+    lower.includes('private') ||
+    lower.includes('forbidden') ||
+    lower.includes('http error 403') ||
+    lower.includes('http error 412')
+  )
+}
+
+function normalizeYtDlpError(message: string): string {
+  const cleaned = message.trim()
+  const lower = cleaned.toLowerCase()
+
+  if (lower.includes('instagram sent an empty media response')) {
+    return 'Instagram 没有返回视频内容。这个帖子通常需要登录后才能解析，请在设置里导入 Instagram 登录后的 cookies.txt，或先确认这个帖子在浏览器无登录状态下也能打开。'
+  }
+
+  if (lower.includes('cookies-from-browser') || lower.includes('--cookies') || lower.includes('login') || lower.includes('authenticated')) {
+    return '该内容需要登录态。请在设置里导入对应网站的 cookies.txt 后重试。'
+  }
+
+  if (cleaned.startsWith('ERROR:')) {
+    return cleaned.replace(/^ERROR:\s*/i, '')
+  }
+
+  return cleaned
+}
+
+function normalizeDownloadPath(rawPath: string): string {
+  const unquoted = rawPath.trim().replace(/^"|"$/g, '')
+  if (process.platform === 'win32') {
+    return path.resolve(unquoted.replace(/\//g, '\\'))
+  }
+  return path.resolve(unquoted)
+}
+
+function findDownloadedMediaFile(outputDir: string, startedAt: number, preferredBase?: string): string {
+  if (!fs.existsSync(outputDir)) return ''
+
+  const mediaExtensions = new Set(['.mp4', '.mov', '.mkv', '.webm', '.m4v', '.mp3', '.m4a', '.aac', '.srt', '.vtt'])
+  const files = fs.readdirSync(outputDir)
+    .map((name) => {
+      const fullPath = path.join(outputDir, name)
+      const stat = fs.statSync(fullPath)
+      return { name, fullPath, stat }
+    })
+    .filter((item) => item.stat.isFile())
+    .filter((item) => mediaExtensions.has(path.extname(item.name).toLowerCase()))
+    .filter((item) => item.stat.mtimeMs >= startedAt - 5000)
+    .sort((a, b) => b.stat.mtimeMs - a.stat.mtimeMs)
+
+  if (preferredBase) {
+    const base = path.basename(preferredBase, path.extname(preferredBase))
+    const preferred = files.find((item) => path.basename(item.name, path.extname(item.name)).startsWith(base))
+    if (preferred) return preferred.fullPath
+  }
+
+  return files[0]?.fullPath || ''
 }
 
 // 使用无头浏览器解析抖音视频
@@ -1865,53 +2113,78 @@ async function parseKuaishouWithPuppeteer(url: string): Promise<any> {
 ipcMain.handle('ytdlp:parse', async (_event, ...args) => {
   const url = args[0] as string
   const cookiesFile = args[1] as string | undefined
+  sendProcessLog({ scope: 'parse', message: `开始解析：${url}` })
   // 如果是抖音链接，优先使用 API 解析
   if (isDouyinUrl(url)) {
     try {
-      return await parseDouyinWithAPI(url)
+      sendProcessLog({ scope: 'parse', message: '检测到抖音链接，使用快速 API 解析' })
+      const result = await parseDouyinWithAPI(url)
+      sendProcessLog({ scope: 'parse', message: '抖音快速 API 解析完成' })
+      return result
     } catch (e: any) {
+      sendProcessLog({ scope: 'parse', level: 'warn', message: `抖音快速 API 解析失败：${e.message || e}` })
       try {
-        return await parseDouyinWithPuppeteer(url)
+        sendProcessLog({ scope: 'parse', message: '改用浏览器内核解析抖音页面' })
+        const result = await parseDouyinWithPuppeteer(url)
+        sendProcessLog({ scope: 'parse', message: '抖音浏览器解析完成' })
+        return result
       } catch (e2: any) {
+        sendProcessLog({ scope: 'parse', level: 'warn', message: `抖音浏览器解析失败：${e2.message || e2}` })
       }
     }
   }
   // 如果是快手链接，使用 Puppeteer 解析
   if (isKuaishouUrl(url)) {
     try {
+      sendProcessLog({ scope: 'parse', message: '检测到快手链接，使用快速 API 解析' })
       const result = await parseKuaishouWithAPI(url)
+      sendProcessLog({ scope: 'parse', message: '快手快速 API 解析完成' })
       return result
     } catch (e: any) {
+      sendProcessLog({ scope: 'parse', level: 'warn', message: `快手快速 API 解析失败：${e.message || e}` })
       try {
+        sendProcessLog({ scope: 'parse', message: '改用浏览器内核解析快手页面' })
         const result = await parseKuaishouWithPuppeteer(url)
+        sendProcessLog({ scope: 'parse', message: '快手浏览器解析完成' })
         return result
       } catch (e2: any) {
+        sendProcessLog({ scope: 'parse', level: 'warn', message: `快手浏览器解析失败：${e2.message || e2}` })
       }
     }
   }
   
   return new Promise(async (resolve, reject) => {
-    const ytdlpPath = getYtDlpPath()
+    const ytdlpRunner = getYtDlpRunner()
     const isYoutube = url.includes('youtube.com') || url.includes('youtu.be')
-    const isBilibili = url.includes('bilibili.com') || url.includes('b23.tv')
+    sendProcessLog({
+      scope: 'parse',
+      message: ytdlpRunner.argsPrefix.length > 0 ? '使用 Python 版 yt-dlp 启动器' : '使用 yt-dlp 二进制启动器',
+    })
 
     const args: string[] = [
       '--no-playlist',
       '--no-check-certificates',
+      '--socket-timeout', '12',
+      '--extractor-retries', '1',
+      '--retry-sleep', 'extractor:1',
       '--user-agent', 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
       '--add-header', 'Accept-Language:en-US,en;q=0.9',
       '--add-header', 'Accept:text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
     ]
 
-    // YouTube 使用 --print 获取完整格式列表（含 m3u8 多音轨），其他站点用 --dump-json
+    // YouTube 使用单条 JSON 输出，避免 --print 在部分环境下返回空输出或多行内容。
     if (isYoutube) {
-      args.unshift('--print', '%()j')
+      args.unshift('--dump-single-json')
     } else {
       args.unshift('--dump-json')
     }
 
     // YouTube 需要 JS 运行时（优先使用 Node.js）
     if (isYoutube) {
+      sendProcessLog({ scope: 'parse', message: '检测到 YouTube，检查 JS 运行时' })
+      args.push('--remote-components', 'ejs:github')
+      args.push('--extractor-args', 'youtube:player_client=web_embedded')
+      sendProcessLog({ scope: 'parse', message: '启用 YouTube EJS 解码组件和快速客户端' })
       const runtimeCheck = checkJsRuntime()
       if (!runtimeCheck.available) {
         await promptNodeDownload()
@@ -1924,50 +2197,111 @@ ipcMain.handle('ytdlp:parse', async (_event, ...args) => {
         const isNode = runtimePath.includes('node')
         const runtimeName = isNode ? 'node' : 'deno'
         args.push('--js-runtimes', `${runtimeName}:${runtimePath}`)
+        sendProcessLog({ scope: 'parse', message: `JS 运行时：${runtimeCheck.name}` })
       }
 
-      if (cookiesFile && fs.existsSync(cookiesFile)) {
-        args.push('--cookies', cookiesFile)
-      } else {
-        const browser = getAvailableBrowser()
-        if (browser) args.push('--cookies-from-browser', browser)
-      }
     }
 
-    // B站也需要 cookies 避免 412 错误
-    if (isBilibili) {
-      if (cookiesFile && fs.existsSync(cookiesFile)) {
-        args.push('--cookies', cookiesFile)
-      } else {
-        const browser = getAvailableBrowser()
-        if (browser) args.push('--cookies-from-browser', browser)
-      }
+    appendCookieArgs(args, url, cookiesFile, { includeBrowser: false })
+    if (cookiesFile) {
+      sendProcessLog({ scope: 'parse', message: '使用手动导入的 cookies.txt' })
+    } else {
+      sendProcessLog({ scope: 'parse', message: '快速解析：暂不读取浏览器 Cookie' })
     }
-    
     args.push(url)
-    
-    // 设置工作目录为 yt-dlp 所在目录
-    const cwd = path.dirname(ytdlpPath)
-    const child = spawn(ytdlpPath, args, { cwd })
-    let output = ''
-    let errorOutput = ''
-    
-    child.stdout?.on('data', (data: Buffer) => {
-      output += data.toString()
+
+    const cwd = ytdlpRunner.cwd
+    const runYtDlpParse = (runArgs: string[]) => new Promise<{ code: number | null; output: string; errorOutput: string }>((resolveRun, rejectRun) => {
+      sendProcessLog({ scope: 'parse', message: '启动 yt-dlp 提取元数据' })
+      const child = spawn(ytdlpRunner.command, [...ytdlpRunner.argsPrefix, ...runArgs], { cwd })
+      let output = ''
+      let errorOutput = ''
+      const startedAt = Date.now()
+      let lastActivityAt = startedAt
+      let timedOut = false
+      let lastHeartbeatAt = startedAt
+      const idleTimeoutMs = isYoutube ? 45000 : 30000
+      const totalTimeoutMs = isYoutube ? 90000 : 70000
+      const heartbeat = setInterval(() => {
+        if (timedOut) return
+        const now = Date.now()
+        if (now - lastHeartbeatAt >= 8000) {
+          const seconds = Math.round((now - startedAt) / 1000)
+          sendProcessLog({ scope: 'parse', level: 'warn', message: `yt-dlp 仍在提取元数据，已等待 ${seconds}s` })
+          lastHeartbeatAt = now
+        }
+        if (!output && now - lastActivityAt >= idleTimeoutMs) {
+          timedOut = true
+          errorOutput += '\nyt-dlp 提取元数据长时间无活动，已自动终止本次尝试'
+          sendProcessLog({ scope: 'parse', level: 'warn', message: '长时间没有收到 yt-dlp 活动，终止本次尝试' })
+          child.kill('SIGTERM')
+          setTimeout(() => {
+            if (!child.killed) child.kill('SIGKILL')
+          }, 3000)
+          return
+        }
+        if (now - startedAt >= totalTimeoutMs || now - lastActivityAt >= totalTimeoutMs) {
+          timedOut = true
+          errorOutput += '\nyt-dlp 提取元数据总耗时超时，已自动终止'
+          sendProcessLog({ scope: 'parse', level: 'warn', message: '解析总耗时超时，终止本次尝试' })
+          child.kill('SIGTERM')
+          setTimeout(() => {
+            if (!child.killed) child.kill('SIGKILL')
+          }, 3000)
+        }
+      }, 2000)
+
+      child.stdout?.on('data', (data: Buffer) => {
+        const text = data.toString()
+        output += text
+        lastActivityAt = Date.now()
+        if (output.length > 0) {
+          sendProcessLog({ scope: 'parse', message: `收到元数据输出 ${output.length} 字符` })
+        }
+      })
+
+      child.stderr?.on('data', (data: Buffer) => {
+        const text = data.toString()
+        errorOutput += text
+        lastActivityAt = Date.now()
+        text.split(/\r?\n/).map(line => line.trim()).filter(Boolean).slice(-3).forEach(line => {
+          sendProcessLog({ scope: 'parse', level: line.toLowerCase().startsWith('error') ? 'error' : 'info', message: line })
+        })
+      })
+
+      child.on('error', (err) => {
+        clearInterval(heartbeat)
+        sendProcessLog({ scope: 'parse', level: 'error', message: `yt-dlp 启动失败：${err.message}` })
+        rejectRun(new Error(`yt-dlp 启动失败：${err.message}`))
+      })
+
+      child.on('close', (code: number | null) => {
+        clearInterval(heartbeat)
+        const finalCode = timedOut && code === null ? -1 : code
+        sendProcessLog({ scope: 'parse', level: finalCode === 0 ? 'info' : 'warn', message: `yt-dlp 解析进程结束，退出码：${finalCode}` })
+        resolveRun({ code: finalCode, output, errorOutput })
+      })
     })
-    
-    child.stderr?.on('data', (data: Buffer) => {
-      errorOutput += data.toString()
-    })
-    
-    child.on('close', (code: number | null) => {
+
+    try {
+      let result = await runYtDlpParse(args)
+
+      if (result.code !== 0 && shouldRetryWithBrowserCookies(url, cookiesFile, result.errorOutput)) {
+        sendProcessLog({ scope: 'parse', level: 'warn', message: '快速解析失败，尝试读取浏览器 Cookie 后重试' })
+        const retryArgs = args.slice(0, -1)
+        appendCookieArgs(retryArgs, url, cookiesFile, { includeBrowser: true })
+        retryArgs.push(url)
+        result = await runYtDlpParse(retryArgs)
+      }
+
+      const { code, output, errorOutput } = result
       if (code !== 0) {
-        reject(new Error(errorOutput || '解析失败'))
+        reject(new Error(normalizeYtDlpError(errorOutput || '解析失败')))
         return
       }
-      
-      try {
-        const info = JSON.parse(output)
+
+      const info = parseYtDlpJsonOutput(output, errorOutput)
+      sendProcessLog({ scope: 'parse', message: '元数据解析完成，正在整理格式列表' })
 
         // 返回所有视频格式（B站/Instagram可能音视频分离，yt-dlp会自动合并）
         let formats = (info.formats || [])
@@ -2174,7 +2508,6 @@ ipcMain.handle('ytdlp:parse', async (_event, ...args) => {
         console.error('解析响应失败:', e)
         reject(new Error('解析响应失败: ' + (e.message || '未知错误')))
       }
-    })
   })
 })
 
@@ -2182,6 +2515,8 @@ ipcMain.handle('ytdlp:parse', async (_event, ...args) => {
 async function downloadDirectFile(url: string, outputPath: string, taskId: string): Promise<void> {
   return new Promise(async (resolve, reject) => {
     try {
+      sendProcessLog({ scope: 'download', taskId, message: '使用直链下载通道' })
+      sendProcessLog({ scope: 'download', taskId, message: `写入文件：${outputPath}` })
       const response = await fetch(url, {
         headers: {
           'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -2190,11 +2525,17 @@ async function downloadDirectFile(url: string, outputPath: string, taskId: strin
       })
 
       if (!response.ok) {
+        sendProcessLog({ scope: 'download', taskId, level: 'error', message: `直链请求失败：HTTP ${response.status}` })
         reject(new Error(`HTTP ${response.status}: ${response.statusText}`))
         return
       }
 
       const totalSize = parseInt(response.headers.get('content-length') || '0')
+      sendProcessLog({
+        scope: 'download',
+        taskId,
+        message: totalSize > 0 ? `服务器返回文件大小：${(totalSize / 1024 / 1024).toFixed(1)} MB` : '服务器未返回文件大小，开始流式写入',
+      })
       const writer = fs.createWriteStream(outputPath)
 
       let downloaded = 0
@@ -2202,6 +2543,7 @@ async function downloadDirectFile(url: string, outputPath: string, taskId: strin
       const reader = response.body?.getReader()
 
       if (!reader) {
+        sendProcessLog({ scope: 'download', taskId, level: 'error', message: '无法读取下载响应流' })
         reject(new Error('无法读取响应流'))
         return
       }
@@ -2254,6 +2596,7 @@ async function downloadDirectFile(url: string, outputPath: string, taskId: strin
         // 等待写入完成
         await new Promise((resolveWriter, rejectWriter) => {
           writer.on('finish', () => {
+            sendProcessLog({ scope: 'download', taskId, message: '直链文件写入完成' })
             sendDownloadProgress({
               taskId: taskId,
               url: url,
@@ -2264,6 +2607,7 @@ async function downloadDirectFile(url: string, outputPath: string, taskId: strin
           })
 
           writer.on('error', (err) => {
+            sendProcessLog({ scope: 'download', taskId, level: 'error', message: `文件写入失败：${err.message}` })
             rejectWriter(err)
           })
         })
@@ -2271,9 +2615,11 @@ async function downloadDirectFile(url: string, outputPath: string, taskId: strin
         resolve()
       } catch (readError) {
         writer.destroy()
+        sendProcessLog({ scope: 'download', taskId, level: 'error', message: `下载流读取失败：${readError instanceof Error ? readError.message : String(readError)}` })
         reject(readError)
       }
     } catch (e) {
+      sendProcessLog({ scope: 'download', taskId, level: 'error', message: `直链下载失败：${e instanceof Error ? e.message : String(e)}` })
       reject(e)
     }
   })
@@ -2292,9 +2638,12 @@ ipcMain.handle('ytdlp:download', async (_event, options: {
   audioTrack?: any
   subtitles?: string[]
   filenameTemplate?: string
+  hasAudio?: boolean
 }) => {
   return new Promise(async (resolve, reject) => {
     const outputDir = ensureDownloadDir(options.outputDir)
+    sendProcessLog({ scope: 'download', taskId: options.taskId, message: `准备下载：${options.url}` })
+    sendProcessLog({ scope: 'download', taskId: options.taskId, message: `输出目录：${outputDir}` })
     
     // 如果有直接下载链接（抖音），使用直接下载
     if (options.directUrl) {
@@ -2310,9 +2659,14 @@ ipcMain.handle('ytdlp:download', async (_event, options: {
       }
     }
     
-    const ytdlpPath = getYtDlpPath()
+    const ytdlpRunner = getYtDlpRunner()
     const isYoutube = options.url.includes('youtube.com') || options.url.includes('youtu.be')
-    const isBilibili = options.url.includes('bilibili.com') || options.url.includes('b23.tv')
+    const downloadStartedAt = Date.now()
+    sendProcessLog({
+      scope: 'download',
+      taskId: options.taskId,
+      message: ytdlpRunner.argsPrefix.length > 0 ? '使用 Python 版 yt-dlp 启动器' : '使用 yt-dlp 二进制启动器',
+    })
 
     const userTemplate = options.filenameTemplate || '%(title)s'
     const outputTemplate = path.join(outputDir, `${userTemplate}.%(ext)s`)
@@ -2334,15 +2688,22 @@ ipcMain.handle('ytdlp:download', async (_event, options: {
       } else if (options.audioTrack && options.audioTrack.language) {
         formatSelector = `${options.formatId}+bestaudio[language^=${options.audioTrack.language}]/bestaudio/best`
         console.log('[audioTrack] fallback format selector:', formatSelector)
+      } else if (options.hasAudio) {
+        formatSelector = options.formatId
       } else {
         formatSelector = `${options.formatId}+bestaudio[ext=m4a]/bestaudio/best`
       }
     }
+    sendProcessLog({ scope: 'download', taskId: options.taskId, message: `格式选择器：${formatSelector}` })
 
     const args: string[] = [
       '-o', outputTemplate,
       '--newline',
       '--no-playlist',
+      '--no-check-certificates',
+      '--socket-timeout', '12',
+      '--extractor-retries', '1',
+      '--retry-sleep', 'extractor:1',
       '--encoding', 'utf-8',
     ]
     
@@ -2386,6 +2747,9 @@ ipcMain.handle('ytdlp:download', async (_event, options: {
         reject(new Error('需要安装 Node.js 运行时才能下载 YouTube 视频'))
         return
       }
+      args.push('--remote-components', 'ejs:github')
+      args.push('--extractor-args', 'youtube:player_client=web_embedded')
+      sendProcessLog({ scope: 'download', taskId: options.taskId, message: '启用 YouTube EJS 解码组件和快速客户端' })
 
       const runtimePath = runtimeCheck.path
       if (runtimePath) {
@@ -2394,29 +2758,19 @@ ipcMain.handle('ytdlp:download', async (_event, options: {
         args.push('--js-runtimes', `${runtimeName}:${runtimePath}`)
       }
 
-      if (options.cookiesFile && fs.existsSync(options.cookiesFile)) {
-        args.push('--cookies', options.cookiesFile)
-      } else {
-        const browser = getAvailableBrowser()
-        if (browser) args.push('--cookies-from-browser', browser)
-      }
     }
-
-    // B站也需要 cookies 避免 412 错误
-    if (isBilibili) {
-      if (options.cookiesFile && fs.existsSync(options.cookiesFile)) {
-        args.push('--cookies', options.cookiesFile)
-      } else {
-        const browser = getAvailableBrowser()
-        if (browser) args.push('--cookies-from-browser', browser)
-      }
+    
+    appendCookieArgs(args, options.url, options.cookiesFile)
+    if (options.cookiesFile) {
+      sendProcessLog({ scope: 'download', taskId: options.taskId, message: '使用手动导入的 cookies.txt' })
     }
     
     args.push(options.url)
     
     // 设置工作目录为 yt-dlp 所在目录
-    const cwd = path.dirname(ytdlpPath)
-    const child = spawn(ytdlpPath, args, { cwd })
+    const cwd = ytdlpRunner.cwd
+    sendProcessLog({ scope: 'download', taskId: options.taskId, message: '启动 yt-dlp 下载进程' })
+    const child = spawn(ytdlpRunner.command, [...ytdlpRunner.argsPrefix, ...args], { cwd })
     let downloadedFile = ''
     let lastProgress = 0
     let hasStarted = false
@@ -2443,6 +2797,9 @@ ipcMain.handle('ytdlp:download', async (_event, options: {
     
     child.stdout.on('data', (data) => {
       const line = data.toString()
+      line.split(/\r?\n/).map((item: string) => item.trim()).filter(Boolean).slice(-5).forEach((item: string) => {
+        sendProcessLog({ scope: 'download', taskId: options.taskId, message: item })
+      })
       
       // 解析进度 - 匹配多种格式
       const progressPatterns = [
@@ -2480,19 +2837,19 @@ ipcMain.handle('ytdlp:download', async (_event, options: {
       const destMatch = line.match(/\[download\] Destination: (.+)/)
       if (destMatch) {
         const rawPath = destMatch[1].trim()
-        // 转换为绝对路径并规范化
-        downloadedFile = path.resolve(rawPath.replace(/\//g, '\\'))
+        downloadedFile = normalizeDownloadPath(rawPath)
       }
       
       // 已存在文件
       const existsMatch = line.match(/\[download\] (.+) has already been downloaded/)
       if (existsMatch) {
         const rawPath = existsMatch[1].trim()
-        downloadedFile = path.resolve(rawPath.replace(/\//g, '\\'))
+        downloadedFile = normalizeDownloadPath(rawPath)
       }
       
       // FFmpeg 合并中
       if (line.includes('[Merger]') || line.includes('Merging formats')) {
+        sendProcessLog({ scope: 'download', taskId: options.taskId, message: '正在合并音视频' })
         sendDownloadProgress({
           taskId: options.taskId,
           url: options.url,
@@ -2506,13 +2863,16 @@ ipcMain.handle('ytdlp:download', async (_event, options: {
       const mergeMatch = line.match(/\[Merger\] Merging formats into "(.+)"/)
       if (mergeMatch) {
         const rawPath = mergeMatch[1].trim()
-        downloadedFile = path.resolve(rawPath.replace(/\//g, '\\'))
+        downloadedFile = normalizeDownloadPath(rawPath)
       }
     })
     
     child.stderr.on('data', (data) => {
       const line = data.toString()
       errorOutput += line
+      line.split(/\r?\n/).map((item: string) => item.trim()).filter(Boolean).slice(-5).forEach((item: string) => {
+        sendProcessLog({ scope: 'download', taskId: options.taskId, level: item.toLowerCase().startsWith('error') ? 'error' : 'info', message: item })
+      })
       
       // 某些进度信息在 stderr 中
       const percentMatch = line.match(/(\d+\.?\d*)%/)
@@ -2532,6 +2892,7 @@ ipcMain.handle('ytdlp:download', async (_event, options: {
     })
     
     child.on('close', (code) => {
+      sendProcessLog({ scope: 'download', taskId: options.taskId, level: code === 0 || isPaused ? 'info' : 'error', message: `下载进程结束，退出码：${code}` })
       // 清理任务
       activeDownloads.delete(options.taskId)
       
@@ -2570,9 +2931,9 @@ ipcMain.handle('ytdlp:download', async (_event, options: {
         }
       }
       
-      // 如果没有获取到合并后的路径，手动构造 mp4 路径
-      if (downloadedFile && downloadedFile.endsWith('.m4a')) {
-        downloadedFile = downloadedFile.replace(/\.m4a$/, '.mp4')
+      if (!downloadedFile || !fs.existsSync(downloadedFile)) {
+        const foundFile = findDownloadedMediaFile(outputDir, downloadStartedAt, downloadedFile)
+        if (foundFile) downloadedFile = foundFile
       }
       
       // 清理临时文件
@@ -2627,6 +2988,7 @@ ipcMain.handle('ytdlp:download', async (_event, options: {
     })
     
     child.on('error', (err) => {
+      sendProcessLog({ scope: 'download', taskId: options.taskId, level: 'error', message: `yt-dlp 启动失败：${err.message}` })
       reject(err)
     })
   })
