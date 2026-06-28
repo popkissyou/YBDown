@@ -1,12 +1,16 @@
 <template>
-  <header class="app-drag flex h-[68px] items-center justify-between whitespace-nowrap border-b border-outline-variant/45 bg-surface/95 px-6 backdrop-blur-xl select-none">
-    <div class="flex items-center gap-3 pl-16 text-on-surface">
-      <div class="flex size-9 items-center justify-center rounded-lg border border-primary/20 bg-primary-container text-primary shadow-sm">
-        <MaterialIcon name="arrow_downward" :size="20" :weight="500" />
+  <header class="app-drag flex h-[78px] items-center justify-between whitespace-nowrap border-b border-outline-variant/45 bg-surface/96 px-6 backdrop-blur-xl select-none">
+    <div class="flex items-center gap-4 pl-16 text-on-surface">
+      <div class="brand-logo">
+        <div class="brand-logo-glow"></div>
+        <MaterialIcon name="download" :size="26" :weight="600" />
       </div>
       <div class="flex flex-col leading-tight">
-        <h2 class="font-headline text-[17px] font-semibold">YBDown</h2>
-        <span class="mt-0.5 text-[11px] font-medium text-on-surface-variant">Local media downloader</span>
+        <div class="flex items-center gap-2">
+          <h2 class="font-headline text-[24px] font-bold text-on-surface">YBDown</h2>
+          <span class="rounded-md bg-primary-container px-2 py-0.5 text-[11px] font-bold text-on-primary-container">Mac</span>
+        </div>
+        <span class="mt-1 text-[12px] font-semibold text-on-surface-variant">视频解析与下载工作台</span>
       </div>
     </div>
     
@@ -62,5 +66,43 @@ const tabs = [
 .app-no-drag,
 .app-no-drag * {
   -webkit-app-region: no-drag;
+}
+
+.brand-logo {
+  position: relative;
+  display: grid;
+  width: 50px;
+  height: 50px;
+  place-items: center;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--color-primary) 34%, white);
+  border-radius: 14px;
+  background:
+    linear-gradient(145deg, color-mix(in srgb, var(--color-primary) 92%, white), var(--color-primary-dim)),
+    var(--color-primary);
+  color: var(--color-on-primary);
+  box-shadow: 0 14px 32px color-mix(in srgb, var(--color-primary) 28%, transparent);
+}
+
+.brand-logo::after {
+  content: '';
+  position: absolute;
+  inset: 9px;
+  border: 1px solid color-mix(in srgb, white 48%, transparent);
+  border-radius: 10px;
+}
+
+.brand-logo .material-symbols-outlined {
+  position: relative;
+  z-index: 1;
+}
+
+.brand-logo-glow {
+  position: absolute;
+  width: 70px;
+  height: 70px;
+  transform: translate(13px, -22px);
+  border-radius: 999px;
+  background: color-mix(in srgb, white 35%, transparent);
 }
 </style>

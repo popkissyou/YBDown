@@ -3,10 +3,20 @@
   <rect y="0" width="1600" height="86" fill="#F8FAFC"/>
   <line y1="85.5" x2="1600" y2="85.5" stroke="#CBD5E1"/>
 
-  <rect x="110" y="20" width="46" height="46" rx="10" fill="#DBEAFE" stroke="#BFDBFE"/>
-  <path d="M133 31v22m0 0l-9-9m9 9l9-9" stroke="#2563EB" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-  <text x="172" y="43" font-family="Arial, 'Noto Sans SC', sans-serif" font-size="25" font-weight="700" fill="#111827">YBDown</text>
-  <text x="172" y="65" font-family="Arial, 'Noto Sans SC', sans-serif" font-size="14" fill="#64748B">Local media downloader</text>
+  <defs>
+    <linearGradient id="brand" x1="110" y1="18" x2="162" y2="70" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#3B82F6"/>
+      <stop offset="1" stop-color="#1D4ED8"/>
+    </linearGradient>
+  </defs>
+  <rect x="108" y="16" width="54" height="54" rx="15" fill="url(#brand)" stroke="#93C5FD"/>
+  <circle cx="148" cy="30" r="24" fill="white" fill-opacity="0.2"/>
+  <rect x="120" y="28" width="30" height="30" rx="8" stroke="white" stroke-opacity="0.52"/>
+  <path d="M135 28v24m0 0l-10-10m10 10l10-10" stroke="white" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="180" y="43" font-family="Arial, 'Noto Sans SC', sans-serif" font-size="30" font-weight="800" fill="#111827">YBDown</text>
+  <rect x="321" y="22" width="45" height="24" rx="7" fill="#DBEAFE"/>
+  <text x="343.5" y="39" text-anchor="middle" font-family="Arial, 'Noto Sans SC', sans-serif" font-size="12" font-weight="800" fill="#1D4ED8">Mac</text>
+  <text x="180" y="67" font-family="Arial, 'Noto Sans SC', sans-serif" font-size="15" font-weight="700" fill="#64748B">视频解析与下载工作台</text>
 
   <rect x="1178" y="14" width="328" height="58" rx="8" fill="#FFFFFF" stroke="#D7DEE8"/>
   <rect x="1186" y="22" width="106" height="42" rx="7" fill="#2563EB"/>
@@ -23,12 +33,12 @@
   <circle cx="48" cy="138" r="7" fill="#0F766E"/>
   <circle cx="48" cy="138" r="18" fill="#0F766E" fill-opacity="0.16"/>
   <text x="72" y="145" font-family="Arial, 'Noto Sans SC', sans-serif" font-size="15" font-weight="700" fill="#64748B">本地引擎已就绪</text>
-  <text x="40" y="198" font-family="Arial, 'Noto Sans SC', sans-serif" font-size="44" font-weight="800" fill="#111827">媒体解析工作台</text>
+  <text x="40" y="198" font-family="Arial, 'Noto Sans SC', sans-serif" font-size="46" font-weight="800" fill="#111827">媒体解析工作台</text>
+  <rect x="394" y="164" width="68" height="28" rx="7" fill="#DBEAFE"/>
+  <text x="428" y="183" text-anchor="middle" font-family="Arial, 'Noto Sans SC', sans-serif" font-size="13" font-weight="800" fill="#1E40AF">macOS</text>
+  <rect x="472" y="164" width="82" height="28" rx="7" fill="#CCFBF1"/>
+  <text x="513" y="183" text-anchor="middle" font-family="Arial, 'Noto Sans SC', sans-serif" font-size="13" font-weight="800" fill="#0F766E">本地处理</text>
   <text x="40" y="242" font-family="Arial, 'Noto Sans SC', sans-serif" font-size="22" fill="#64748B">粘贴链接后自动解析可下载资源，再选择画质、音轨或字幕交给本地引擎处理。</text>
-
-  <rect x="782" y="148" width="180" height="78" rx="8" fill="#FFFFFF" stroke="#D7DEE8"/>
-  <text x="872" y="177" text-anchor="middle" font-family="Arial, sans-serif" font-size="15" font-weight="700" fill="#111827">Local Engine</text>
-  <text x="872" y="203" text-anchor="middle" font-family="'SF Mono', Menlo, monospace" font-size="14" fill="#475569">yt-dlp / ffmpeg</text>
 
   <rect x="40" y="256" width="924" height="318" rx="8" fill="#FFFFFF" stroke="#C8D3E0"/>
   <rect x="60" y="280" width="46" height="46" rx="10" fill="#DBEAFE"/>

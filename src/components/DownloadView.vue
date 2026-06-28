@@ -3,33 +3,33 @@
     <!-- Left Panel -->
     <section class="relative flex w-[63%] flex-col border-r border-outline-variant/45 bg-surface/88">
       <div class="flex-1 overflow-y-auto px-8 py-7">
-        <div class="mx-auto flex w-full max-w-3xl flex-col gap-6">
+        <div class="mx-auto flex w-full max-w-3xl flex-col gap-5">
           <!-- Title -->
-          <div class="flex items-end justify-between gap-4">
-            <div class="flex flex-col gap-1">
-              <div class="flex items-center gap-2">
-                <span class="status-dot"></span>
-                <span class="section-kicker">本地引擎已就绪</span>
+          <div class="flex flex-col gap-1">
+            <div class="flex items-center gap-2">
+              <span class="status-dot"></span>
+              <span class="section-kicker">本地引擎已就绪</span>
+            </div>
+            <div class="flex flex-wrap items-center gap-3">
+              <h1 class="shrink-0 font-headline text-[31px] font-bold leading-tight text-on-surface">媒体解析工作台</h1>
+              <div class="flex shrink-0 items-center gap-2">
+                <span class="rounded-md bg-primary-container px-2.5 py-1 text-xs font-bold text-on-primary-container">macOS</span>
+                <span class="rounded-md bg-tertiary-container px-2.5 py-1 text-xs font-bold text-on-tertiary-container">本地处理</span>
               </div>
-              <h1 class="font-headline text-[28px] font-semibold leading-tight text-on-surface">媒体解析工作台</h1>
-              <p class="max-w-xl text-sm leading-6 text-on-surface-variant">粘贴链接后自动解析可下载资源，再选择画质、音轨或字幕交给本地引擎处理。</p>
             </div>
-            <div class="hidden min-w-[150px] rounded-lg border border-outline-variant/40 bg-surface-container-lowest px-3.5 py-3 text-right text-xs text-on-surface-variant shadow-sm lg:block">
-              <div class="font-semibold text-on-surface">Local Engine</div>
-              <div class="mt-1 font-mono">yt-dlp / ffmpeg</div>
-            </div>
+            <p class="max-w-2xl text-sm leading-6 text-on-surface-variant">粘贴链接后自动解析可下载资源，再选择画质、音轨或字幕交给本地引擎处理。</p>
           </div>
           
           <!-- URL Input -->
-          <div class="pro-panel flex flex-col gap-3 rounded-lg p-4">
+          <div class="pro-panel flex flex-col gap-2.5 rounded-lg p-3.5">
             <div class="flex items-center justify-between gap-3">
               <div class="flex items-center gap-2">
-                <div class="flex size-8 items-center justify-center rounded-md bg-primary-container text-primary">
-                  <MaterialIcon name="link" :size="18" />
+                <div class="flex size-7 items-center justify-center rounded-md bg-primary-container text-primary">
+                  <MaterialIcon name="link" :size="16" />
                 </div>
                 <div>
                   <p class="text-sm font-semibold text-on-surface">视频链接</p>
-                  <p class="text-xs text-on-surface-variant">支持单个视频、播放页和短链接</p>
+                  <p class="text-[11px] text-on-surface-variant">支持单个视频、播放页和短链接</p>
                 </div>
               </div>
               <span class="hidden rounded-md bg-surface-container-low px-2.5 py-1 font-mono text-[11px] text-on-surface-variant sm:inline-flex">Paste URL</span>
@@ -39,7 +39,7 @@
                 ref="urlInput"
                 v-model="url"
                 aria-label="Paste video URL here" 
-                class="soft-input h-28 w-full resize-none rounded-lg border border-outline-variant/35 p-3.5 font-body text-sm text-on-surface placeholder:text-on-surface-variant/60 transition-all focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10"
+                class="soft-input h-20 w-full resize-none rounded-lg border border-outline-variant/35 p-3 font-body text-sm text-on-surface placeholder:text-on-surface-variant/60 transition-all focus:border-primary focus:outline-none focus:ring-4 focus:ring-primary/10"
                 placeholder="在此处粘贴需要解析的视频链接..."
                 @contextmenu.prevent="showContextMenu"
               />
@@ -89,14 +89,14 @@
             </div>
             <div class="flex gap-3">
               <button 
-                class="flex h-11 flex-1 items-center justify-center gap-2 rounded-lg border border-outline-variant/35 bg-surface-container-low text-sm font-semibold text-on-surface transition-colors hover:bg-surface-container-high"
+                class="flex h-10 flex-1 items-center justify-center gap-2 rounded-lg border border-outline-variant/35 bg-surface-container-low text-sm font-semibold text-on-surface transition-colors hover:bg-surface-container-high"
                 @click="pasteUrl"
               >
                 <MaterialIcon name="content_paste" :size="18" />
                 <span>粘贴链接</span>
               </button>
               <button
-                class="flex h-11 flex-[1.5] items-center justify-center gap-2 rounded-lg bg-primary text-sm font-semibold text-on-primary shadow-sm transition-all hover:bg-primary-dim disabled:cursor-not-allowed disabled:opacity-50"
+                class="flex h-10 flex-[1.5] items-center justify-center gap-2 rounded-lg bg-primary text-sm font-semibold text-on-primary shadow-sm transition-all hover:bg-primary-dim disabled:cursor-not-allowed disabled:opacity-50"
                 :disabled="isParsing"
                 @click="parseVideo"
               >
@@ -331,7 +331,7 @@
           <p class="mt-0.5 text-xs text-on-surface-variant">下载进度、日志和文件位置</p>
         </div>
         <div class="flex items-center gap-2">
-          <span class="rounded-md bg-secondary-container px-2.5 py-1 text-xs font-bold text-on-secondary-container">
+          <span class="whitespace-nowrap rounded-md bg-secondary-container px-2.5 py-1 text-xs font-bold text-on-secondary-container">
             {{ activeTaskCount }} 进行中
           </span>
           <button 
