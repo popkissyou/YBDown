@@ -987,7 +987,7 @@ async function startDownload() {
   
   const task: DownloadTask = {
     id: taskId,
-    url: url.value,
+    url: videoInfo.value.webpageUrl || url.value,
     videoInfo: videoInfo.value,
     selectedFormat: downloadMode.value === 'audio' && selectedAudioFormat.value
       ? { ...selectedAudioFormat.value, quality: selectedAudioFormat.value.quality, ext: selectedAudioFormat.value.ext }

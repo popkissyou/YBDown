@@ -555,8 +555,17 @@ async function parseDouyinWithAPI(url: string): Promise<any> {
   if (videoMatch) {
     videoId = videoMatch[1]
   }
+
+  // 2. https://www.douyin.com/user/self?...&modal_id=7082345237837899051
+  if (!videoId) {
+    try {
+      const parsedUrl = new URL(url)
+      videoId = parsedUrl.searchParams.get('modal_id')
+    } catch {
+    }
+  }
   
-  // 2. 短链接格式 https://v.douyin.com/xxxxx
+  // 3. 短链接格式 https://v.douyin.com/xxxxx
   if (!videoId) {
     try {
       const response = await fetch(url, {
@@ -570,6 +579,12 @@ async function parseDouyinWithAPI(url: string): Promise<any> {
       const newVideoMatch = redirectedUrl.match(/\/video\/(\d+)/)
       if (newVideoMatch) {
         videoId = newVideoMatch[1]
+      } else {
+        try {
+          const parsedRedirectUrl = new URL(redirectedUrl)
+          videoId = parsedRedirectUrl.searchParams.get('modal_id')
+        } catch {
+        }
       }
     } catch (e) {
     }
@@ -697,7 +712,7 @@ async function parseDouyinWithAPI(url: string): Promise<any> {
     thumbnail: detail.video?.cover?.url_list[0] || detail.video?.dynamic_cover?.url_list[0] || '',
     duration: detail.video?.duration ? Math.floor(detail.video.duration / 1000) : 0,
     uploader: detail.author?.nickname || '',
-    webpageUrl: url,
+    webpageUrl: `https://www.douyin.com/video/${detail.aweme_id || videoId}`,
     formats: formats
   }
 }
@@ -1143,7 +1158,7 @@ async function parseDouyinWithPuppeteer(url: string): Promise<any> {
         thumbnail: detail.video?.cover?.url_list[0] || detail.video?.dynamic_cover?.url_list[0] || '',
         duration: detail.video?.duration ? Math.floor(detail.video.duration / 1000) : 0,
         uploader: detail.author?.nickname || '',
-        webpageUrl: url,
+        webpageUrl: `https://www.douyin.com/video/${detail.aweme_id}`,
         formats: formats
       }
     } else {
