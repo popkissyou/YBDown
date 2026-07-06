@@ -809,6 +809,9 @@ async function pasteUrl() {
 function extractUrl(text: string): string {
   // 移除乱码字符（锟斤拷等）
   const cleanText = text.replace(/锟斤拷|锟|斤|拷/g, '').trim()
+
+  const douyinModalMatch = cleanText.match(/https?:\/\/(?:www\.)?douyin\.com\/[^\s\u4e00-\u9fa5]*[?&]modal_id=(\d+)/i)
+  if (douyinModalMatch) return `https://www.douyin.com/video/${douyinModalMatch[1]}`
   
   // 抖音链接匹配
   const douyinMatch = cleanText.match(/https:\/\/v\.douyin\.com\/[a-zA-Z0-9_\-]+/i)
