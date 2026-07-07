@@ -643,16 +643,7 @@ async function parseDouyinWithAPI(url: string): Promise<any> {
           qualityKey = String(br.height)
         }
         
-        let filesize = br.data_size || 0
-        if (!filesize && video.duration) {
-          const durationSec = video.duration / 1000
-          let estimatedBitrate = 2000000
-          if (height >= 1080) estimatedBitrate = 5000000
-          else if (height >= 720) estimatedBitrate = 2500000
-          else if (height >= 480) estimatedBitrate = 1500000
-          else if (height >= 360) estimatedBitrate = 800000
-          filesize = Math.floor((estimatedBitrate * durationSec) / 8)
-        }
+        const filesize = br.data_size || 0
         
         const existing = qualityMap.get(qualityKey)
         if (!existing || filesize > existing.filesize) {
@@ -675,18 +666,7 @@ async function parseDouyinWithAPI(url: string): Promise<any> {
   // 如果没有从 bit_rate 获取到格式，尝试使用 play_addr
   if (qualityMap.size === 0 && video.play_addr) {
     const playAddr = video.play_addr
-    let filesize = playAddr.data_size || 0
-    
-    if (!filesize && video.duration) {
-      const durationSec = video.duration / 1000
-      const height = playAddr.height || 720
-      let estimatedBitrate = 2000000
-      if (height >= 1080) estimatedBitrate = 5000000
-      else if (height >= 720) estimatedBitrate = 2500000
-      else if (height >= 480) estimatedBitrate = 1500000
-      else if (height >= 360) estimatedBitrate = 800000
-      filesize = Math.floor((estimatedBitrate * durationSec) / 8)
-    }
+    const filesize = playAddr.data_size || 0
     
     qualityMap.set('default', {
       formatId: 'normal',
@@ -701,9 +681,9 @@ async function parseDouyinWithAPI(url: string): Promise<any> {
     })
   }
   
-  const formats = Array.from(qualityMap.values())
+  const formats = await resolveFormatFilesizes(Array.from(qualityMap.values())
     .filter(f => f.url)
-    .sort((a, b) => (b.height || 0) - (a.height || 0))
+    .sort((a, b) => (b.height || 0) - (a.height || 0)))
   
   return {
     id: detail.aweme_id,
@@ -838,6 +818,55 @@ function appendCookieArgs(args: string[], url: string, cookiesFile?: string, opt
 
   const browser = getAvailableBrowser()
   if (browser) args.push('--cookies-from-browser', browser)
+}
+
+async function getRemoteFileSize(url: string, referer = 'https://www.douyin.com/'): Promise<number> {
+  const headers = {
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+    'Referer': referer,
+  }
+  const fetchWithTimeout = async (input: string, init: RequestInit): Promise<Response> => {
+    const controller = new AbortController()
+    const timeout = setTimeout(() => controller.abort(), 5000)
+    try {
+      return await fetch(input, { ...init, signal: controller.signal })
+    } finally {
+      clearTimeout(timeout)
+    }
+  }
+
+  try {
+    const headResponse = await fetchWithTimeout(url, { method: 'HEAD', redirect: 'follow', headers })
+    const length = Number(headResponse.headers.get('content-length') || 0)
+    if (headResponse.ok && Number.isFinite(length) && length > 0) return length
+  } catch {
+  }
+
+  try {
+    const rangeResponse = await fetchWithTimeout(url, {
+      method: 'GET',
+      redirect: 'follow',
+      headers: { ...headers, Range: 'bytes=0-0' },
+    })
+    const contentRange = rangeResponse.headers.get('content-range') || ''
+    const totalMatch = contentRange.match(/\/(\d+)$/)
+    const total = totalMatch ? Number(totalMatch[1]) : 0
+    if (Number.isFinite(total) && total > 0) return total
+
+    const length = Number(rangeResponse.headers.get('content-length') || 0)
+    if (rangeResponse.ok && Number.isFinite(length) && length > 1) return length
+  } catch {
+  }
+
+  return 0
+}
+
+async function resolveFormatFilesizes(formats: any[], referer = 'https://www.douyin.com/'): Promise<any[]> {
+  await Promise.all(formats.map(async (format) => {
+    if (format.filesize || !format.url || !format.url.startsWith('http')) return
+    format.filesize = await getRemoteFileSize(format.url, referer)
+  }))
+  return formats
 }
 
 function toNetscapeCookieLine(cookie: any): string {
@@ -982,20 +1011,28 @@ async function parseDouyinWithPuppeteer(url: string): Promise<any> {
       '--disable-dev-shm-usage',
       '--disable-accelerated-2d-canvas',
       '--disable-gpu',
-      '--window-size=1920,1080'
+      '--window-size=1920,1080',
+      '--autoplay-policy=no-user-gesture-required'
     ]
   }
 
   const browser = await puppeteer.launch(launchOptions)
+  let timedOut = false
+  const browserTimeout = setTimeout(() => {
+    timedOut = true
+    sendProcessLog({ scope: 'parse', level: 'warn', message: '抖音浏览器解析超时，正在关闭浏览器内核' })
+    browser.close().catch(() => {})
+  }, 35000)
 
   try {
     const page = await browser.newPage()
 
     // 设置 User-Agent
-    await page.setUserAgent('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
+    await page.setUserAgent('Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36')
 
     // 设置视口
     await page.setViewport({ width: 1920, height: 1080 })
+    sendProcessLog({ scope: 'parse', message: '浏览器内核已启动，正在打开抖音页面' })
 
     // 存储拦截到的视频信息
     let videoInfo: any = null
@@ -1032,13 +1069,15 @@ async function parseDouyinWithPuppeteer(url: string): Promise<any> {
     })
 
     // 访问页面（短链接会重定向）
-    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 45000 })
+    await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 20000 })
+    sendProcessLog({ scope: 'parse', message: `抖音页面已打开：${page.url()}` })
 
     // 等待页面加载
-    await new Promise(resolve => setTimeout(resolve, 5000))
+    await new Promise(resolve => setTimeout(resolve, 3000))
 
     // 滚动页面触发视频加载
-    await page.evaluate(async () => {
+    await Promise.race([
+      page.evaluate(async () => {
       const videoContainer = document.querySelector('.video-container') ||
                              document.querySelector('[data-e2e="video-container"]') ||
                              document.querySelector('.short-video') ||
@@ -1060,11 +1099,14 @@ async function parseDouyinWithPuppeteer(url: string): Promise<any> {
       const video = document.querySelector('video') as HTMLVideoElement | null
       if (video) {
         video.muted = true
-        await video.play().catch(() => {})
+        video.play().catch(() => {})
       }
-    })
+      }),
+      new Promise(resolve => setTimeout(resolve, 8000)),
+    ])
 
-    await new Promise(resolve => setTimeout(resolve, 8000))
+    sendProcessLog({ scope: 'parse', message: '已触发页面播放，等待媒体数据' })
+    await new Promise(resolve => setTimeout(resolve, 5000))
 
     // 尝试从页面 SSR 数据中提取
     renderData = await page.evaluate(() => {
@@ -1111,6 +1153,10 @@ async function parseDouyinWithPuppeteer(url: string): Promise<any> {
                        renderData?.data?.aweme?.aweme_detail ||
                        renderData?.data?.app?.aweme_detail ||
                        renderData?.data?.aweme_detail
+    sendProcessLog({
+      scope: 'parse',
+      message: `浏览器解析数据：detail=${detailData ? '有' : '无'}，media=${mediaUrls.length}`,
+    })
 
     if (detailData) {
       const detail = detailData
@@ -1144,23 +1190,7 @@ async function parseDouyinWithPuppeteer(url: string): Promise<any> {
               qualityKey = String(br.height)
             }
 
-            // 只保留该清晰度下文件大小最大的
-            let filesize = br.data_size || 0
-            
-            // 如果没有文件大小，使用码率和时长估算
-            if (!filesize && video.duration) {
-              // 抖音 duration 是毫秒，需要转换为秒
-              const durationSec = video.duration / 1000
-              // 估算码率：根据清晰度估算 (bps)
-              let estimatedBitrate = 2000000 // 默认 2Mbps
-              if (height >= 1080) estimatedBitrate = 5000000 // 1080p: 5Mbps
-              else if (height >= 720) estimatedBitrate = 2500000 // 720p: 2.5Mbps
-              else if (height >= 480) estimatedBitrate = 1500000 // 480p: 1.5Mbps
-              else if (height >= 360) estimatedBitrate = 800000 // 360p: 0.8Mbps
-              
-              // 文件大小 = 码率 * 时长 / 8 (转换为字节)
-              filesize = Math.floor((estimatedBitrate * durationSec) / 8)
-            }
+            const filesize = br.data_size || 0
             
             const existing = qualityMap.get(qualityKey)
 
@@ -1184,19 +1214,7 @@ async function parseDouyinWithPuppeteer(url: string): Promise<any> {
       // 如果没有从 bit_rate 获取到格式，尝试使用 play_addr
       if (qualityMap.size === 0 && video.play_addr) {
         const playAddr = video.play_addr
-        let filesize = playAddr.data_size || 0
-        
-        // 如果没有文件大小，使用码率和时长估算
-        if (!filesize && video.duration) {
-          const durationSec = video.duration / 1000
-          const height = playAddr.height || 720
-          let estimatedBitrate = 2000000
-          if (height >= 1080) estimatedBitrate = 5000000
-          else if (height >= 720) estimatedBitrate = 2500000
-          else if (height >= 480) estimatedBitrate = 1500000
-          else if (height >= 360) estimatedBitrate = 800000
-          filesize = Math.floor((estimatedBitrate * durationSec) / 8)
-        }
+        const filesize = playAddr.data_size || 0
         
         qualityMap.set('default', {
           formatId: 'normal',
@@ -1294,9 +1312,15 @@ async function parseDouyinWithPuppeteer(url: string): Promise<any> {
       throw new Error('无法获取视频信息，请检查链接是否有效')
     }
 
+    videoInfo.formats = await resolveFormatFilesizes(videoInfo.formats, 'https://www.douyin.com/')
+
     return videoInfo
   } finally {
-    await browser.close()
+    clearTimeout(browserTimeout)
+    if (timedOut) {
+      throw new Error('抖音浏览器解析超时，请重试或换一个链接')
+    }
+    await browser.close().catch(() => {})
   }
 }
 
